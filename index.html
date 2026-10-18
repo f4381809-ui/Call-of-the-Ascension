@@ -149,7 +149,7 @@ input[type=search]{width:100%;padding:9px 12px;border:1px solid var(--line);bord
     <details class="sec" id="sec_ed" hidden><summary>🛠 Редактор карты</summary><div class="body">
       <button id="ed_on" class="pbtn"></button>
       <div id="ed_tools" hidden><button class="pbtn" id="t_sel">☝ Выбрать</button><button class="pbtn" id="t_star">+ Исток</button><button class="pbtn" id="t_zone">+ Зона</button><button class="pbtn" id="t_pen">✏ Карандаш</button><button class="pbtn" id="t_line">〰 Линия</button><button class="pbtn" id="t_move">✥ Двигать</button><button class="pbtn" id="t_erase">🗑 Ластик</button><button class="pbtn" id="t_undo">↶ Отменить</button><p><small id="ed_hint"></small></p></div>
-      <div id="ed_zl"></div>
+      <h4 class="sub">Управление территориями</h4><p class="note">Скрывает границы, цветную заливку и названия территорий. Все звёзды и ваши изменения остаются на месте.</p><div class="btns"><button id="clear_blood" class="pbtn">Убрать Кровавое пространство</button><button id="clear_dragon" class="pbtn">Убрать Драконье гнездо</button></div><div id="ed_zl"></div>
       <div class="btns"><button id="ed_cat" class="pbtn">🏷 Категории</button><button id="ed_xp" class="pbtn">Данные: экспорт / импорт</button></div>
     </div></details>
     <details class="sec" open><summary>ℹ️ Информация</summary><div class="body">
@@ -260,9 +260,10 @@ var cv=document.getElementById("cv"),ctx=cv.getContext("2d"),W=0,H=0,dpr=1,k=1,o
 function rng(s){return function(){s|=0;s=s+0x6D2B79F5|0;var t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function bR(t,a){return t.r*(1+0.18*Math.sin(3*a+t.s)+0.12*Math.sin(5*a+t.s*2))}
 function inT(t,x,y){var dx=x-t.cx,dy=y-t.cy;return Math.hypot(dx,dy)<bR(t,Math.atan2(dy,dx))}
-function zoneOf(x,y){var d=Math.hypot(x,y);for(var u=0;u<UZ.length;u++)if(inZ(UZ[u],x,y))return UZ[u].n;for(var j=0;j<BUBBLES.length;j++)if(Math.hypot(x-BUBBLES[j].cx,y-BUBBLES[j].cy)<BUBBLES[j].r)return "Потусторонний мир · "+BUBBLES[j].n;for(var i=0;i<TERR.length;i++)if(inT(TERR[i],x,y))return TERR[i].n+" · Малый Исток";
+function zoneOf(x,y){var d=Math.hypot(x,y);for(var u=0;u<UZ.length;u++)if(inZ(UZ[u],x,y))return UZ[u].n;for(var j=0;j<BUBBLES.length;j++)if(Math.hypot(x-BUBBLES[j].cx,y-BUBBLES[j].cy)<BUBBLES[j].r)return "Потусторонний мир · "+BUBBLES[j].n;for(var i=0;i<TERR.length;i++)if(!(i===0&&ZONE_HIDDEN.blood||i===1&&ZONE_HIDDEN.dragon)&&inT(TERR[i],x,y))return TERR[i].n+" · Малый Исток";
   return d<ZONES[2].r?"Малый Исток":d<ZONES[1].r?"Средний Исток":d<ZONES[0].r?"Большой Исток":"Пустота"}
 // Генерация звёзд
+var ZONE_HIDDEN={blood:false,dragon:false};
 var COLS=["#cfe0ff","#fff2c8","#ffd0a0","#ff5a6a","#c58cff"],B=[[],[],[],[],[]],R=rng(7);
 BUBBLES.forEach(function(b){b.ox0=b.cx;b.oy0=b.cy;b.ph=R()*6.28;b.sp=0.7+R()*0.6;b.st=[[],[]];b.dt=ZONES[0].r+b.r;b.wa=Math.min(400,Math.max(0,Math.hypot(b.cx,b.cy)-b.dt)*0.45)});
 NAMED.forEach(function(n){n.b=-1;BUBBLES.forEach(function(b,i){if(Math.hypot(n[1]-b.cx,n[2]-b.cy)<b.r){n.b=i;n.dx=n[1]-b.cx;n.dy=n[2]-b.cy}})});
@@ -288,7 +289,7 @@ function draw(){moveBubbles();
   BUBBLES.forEach(function(b){var sx=b.cx*k+ox,sy=b.cy*k+oy,rr=b.r*k;if(sx+rr<0||sx-rr>W||sy+rr<0||sy-rr>H)return;
     var g=ctx.createRadialGradient(sx-rr*.3,sy-rr*.3,rr*.1,sx,sy,rr);g.addColorStop(0,"rgba("+b.c+",.22)");g.addColorStop(1,"rgba("+b.c+",.05)");
     ctx.beginPath();ctx.arc(sx,sy,rr,0,6.2832);ctx.fillStyle=g;ctx.fill();ctx.shadowColor="rgb("+b.c+")";ctx.shadowBlur=convC*30;ctx.strokeStyle="rgba("+b.c+",.85)";ctx.lineWidth=2+convC*2;ctx.stroke();ctx.shadowBlur=0;[.75,.428].forEach(function(f){ctx.beginPath();ctx.arc(sx,sy,rr*f,0,6.2832);ctx.setLineDash([8,8]);ctx.strokeStyle="rgba("+b.c+",.35)";ctx.lineWidth=1;ctx.stroke();ctx.setLineDash([])})});
-  TERR.forEach(function(t){var gx=t.cx*k+ox,gy=t.cy*k+oy,gr=t.r*1.6*k,gg=ctx.createRadialGradient(gx,gy,0,gx,gy,gr);gg.addColorStop(0,"rgba("+t.c+",.22)");gg.addColorStop(1,"rgba("+t.c+",0)");ctx.fillStyle=gg;ctx.fillRect(gx-gr,gy-gr,gr*2,gr*2);path(t);ctx.fillStyle="rgba("+t.c+",.13)";ctx.fill();ctx.strokeStyle="rgba("+t.c+",.8)";ctx.lineWidth=1.5;ctx.stroke()});
+  TERR.forEach(function(t,i){if(i===0&&ZONE_HIDDEN.blood||i===1&&ZONE_HIDDEN.dragon)return;var gx=t.cx*k+ox,gy=t.cy*k+oy,gr=t.r*1.6*k,gg=ctx.createRadialGradient(gx,gy,0,gx,gy,gr);gg.addColorStop(0,"rgba("+t.c+",.22)");gg.addColorStop(1,"rgba("+t.c+",0)");ctx.fillStyle=gg;ctx.fillRect(gx-gr,gy-gr,gr*2,gr*2);path(t);ctx.fillStyle="rgba("+t.c+",.13)";ctx.fill();ctx.strokeStyle="rgba("+t.c+",.8)";ctx.lineWidth=1.5;ctx.stroke()});
   var sz=Math.min(3.4,1.15+0.45*Math.sqrt(k/k0));lodF=Math.min(1,.05*k/k0);
   for(var c=0;c<B.length;c++){ctx.fillStyle=COLS[c];var A=B[c];
     for(var j=0,jn=Math.floor(A.length/3*lodF)*3;j<jn;j+=3){var sx=A[j]*k+ox,sy=A[j+1]*k+oy;if(sx<-4||sx>W+4||sy<-4||sy>H+4)continue;var s=A[j+2]*sz;ctx.fillRect(sx-s/2,sy-s/2,s,s)}}
@@ -297,7 +298,7 @@ function draw(){moveBubbles();
   ZONES.forEach(function(z){ctx.fillStyle="rgba("+z.c+",.95)";lbl(z.n.toUpperCase(),ox,oy-z.r*k-8)});
   ctx.font="600 15px system-ui,sans-serif";BUBBLES.forEach(function(b){ctx.fillStyle="rgb("+b.c+")";var L=wrapL(b.n.toUpperCase(),26);L.forEach(function(t,i){lbl(t,b.cx*k+ox,(b.cy-b.r)*k+oy-8-(L.length-1-i)*17)})});
   ctx.font="600 13px system-ui,sans-serif";
-  TERR.forEach(function(t){ctx.fillStyle="rgb("+t.c+")";lbl(t.n,t.cx*k+ox,(t.cy-t.r*1.25)*k+oy)});
+  TERR.forEach(function(t,i){if(i===0&&ZONE_HIDDEN.blood||i===1&&ZONE_HIDDEN.dragon)return;ctx.fillStyle="rgb("+t.c+")";lbl(t.n,t.cx*k+ox,(t.cy-t.r*1.25)*k+oy)});
   var zoomed=k/k0>10;
   NAMED.forEach(function(n){if(n[4]&&CATV[catOf(n[5]).id]===false)return;var sx=n[1]*k+ox,sy=n[2]*k+oy;if(sx<-60||sx>W+60||sy<-30||sy>H+30)return;
     ctx.beginPath();ctx.arc(sx,sy,zoomed?5:3,0,6.2832);ctx.fillStyle="#fff";ctx.fill();
@@ -496,13 +497,17 @@ function lvCheck(now){now=now||Date.now();var h=Math.floor(now/3600000),ph=now-h
   var el=$("lv_next");if(el)el.textContent="Левиафан: следующий через "+fmt((h+1)*3600000-now)+" (каждый час, на 15 секунд)"}
 var SHARED=false,REV=-1,TOKEN=null,pubT=0,pubBusy=false,pubDirty=false;
 function defPlayer(){return{id:1,name:"Игрок 1",race:"",age:"",acq:"",pas:"",rac:"",kno:"",art:"",x:-80,y:120,h:150,b:-1,trail:[[-80,120]]}}
-function sharedState(){return{CST:CST,UZ:UZ,CATS:CATS,OV:OV,CFG:CFG}}
+function sharedState(){return{CST:CST,UZ:UZ,CATS:CATS,OV:OV,CFG:CFG,ZONE_HIDDEN:ZONE_HIDDEN}}
 function pubSt(t){var e=$("pub_st");if(e)e.textContent=t}
 function tokenValid(t){if(!t)return false;try{var p=JSON.parse(atob(String(t).split(".")[1].replace(/-/g,"+").replace(/_/g,"/")));return p.exp*1000>Date.now()+30000}catch(e){return false}}
 function applyShared(d){if(!d||typeof d!=="object")return;var id=cur&&cur.id;
   CST=Array.isArray(d.CST)?d.CST:[];UZ=Array.isArray(d.UZ)?d.UZ:[];if(Array.isArray(d.CATS)&&d.CATS.length)CATS=d.CATS;
-  OV=d.OV&&typeof d.OV==="object"?d.OV:{stars:{},worlds:{}};CFG=d.CFG&&typeof d.CFG==="object"?d.CFG:null;
+  OV=d.OV&&typeof d.OV==="object"?d.OV:{stars:{},worlds:{}};CFG=d.CFG&&typeof d.CFG==="object"?d.CFG:null;ZONE_HIDDEN={blood:!!(d.ZONE_HIDDEN&&d.ZONE_HIDDEN.blood),dragon:!!(d.ZONE_HIDDEN&&d.ZONE_HIDDEN.dragon)};updateStarCleaner();
   clean();cur=PLAYERS.filter(function(p){return p.id===id})[0]||PLAYERS[0];plSel=false;applyCfg();applyOv();plInfo();if(ADMIN)cfUi();startTrav();draw()}
+function updateStarCleaner(){var a=$("clear_blood"),b=$("clear_dragon");if(a)a.textContent=ZONE_HIDDEN.blood?"Вернуть Кровавое пространство":"Убрать Кровавое пространство";if(b)b.textContent=ZONE_HIDDEN.dragon?"Вернуть Драконье гнездо":"Убрать Драконье гнездо"}
+$("clear_blood").onclick=function(){if(!ADMIN)return;ZONE_HIDDEN.blood=!ZONE_HIDDEN.blood;updateStarCleaner();schedulePub();draw()};
+$("clear_dragon").onclick=function(){if(!ADMIN)return;ZONE_HIDDEN.dragon=!ZONE_HIDDEN.dragon;updateStarCleaner();schedulePub();draw()};
+updateStarCleaner();
 function supaHeaders(auth){return {"apikey":SUPA_KEY,"Authorization":"Bearer "+(auth&&TOKEN?TOKEN:SUPA_KEY),"Content-Type":"application/json"}}
 function pull(first){return fetch(SUPA_URL+"/rest/v1/map_state?id=eq.1&select=revision,data",{headers:supaHeaders(false),cache:"no-store"})
 .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})
@@ -530,7 +535,7 @@ function drawMini(){var d=window.devicePixelRatio||1;if(mm.width!==Math.round(MW
   function X(v){return v*sc+T.ox}function Y(v){return v*sc+T.oy}
   ZONES.forEach(function(z){g.beginPath();g.arc(X(0),Y(0),z.r*sc,0,6.2832);g.strokeStyle="rgba("+z.c+",.7)";g.lineWidth=1;g.stroke()});
   BUBBLES.forEach(function(b){g.beginPath();g.arc(X(b.cx),Y(b.cy),b.r*sc,0,6.2832);g.fillStyle="rgba("+b.c+",.4)";g.fill()});
-  TERR.forEach(function(t){g.beginPath();g.arc(X(t.cx),Y(t.cy),t.r*sc,0,6.2832);g.fillStyle="rgba("+t.c+",.6)";g.fill()});
+  TERR.forEach(function(t,i){if(i===0&&ZONE_HIDDEN.blood||i===1&&ZONE_HIDDEN.dragon)return;g.beginPath();g.arc(X(t.cx),Y(t.cy),t.r*sc,0,6.2832);g.fillStyle="rgba("+t.c+",.6)";g.fill()});
   UZ.forEach(function(z){g.beginPath();if(z.pts)z.pts.forEach(function(q,i){i?g.lineTo(X(q[0]),Y(q[1])):g.moveTo(X(q[0]),Y(q[1]))});else g.arc(X(z.cx),Y(z.cy),z.r*sc,0,6.2832);g.fillStyle="rgba("+z.c+",.55)";g.fill()});
   PLAYERS.forEach(function(p){g.beginPath();g.arc(X(p.x),Y(p.y),2.5,0,6.2832);g.fillStyle="hsl("+p.h+",100%,65%)";g.fill()});
   g.strokeStyle="#fff";g.lineWidth=1.2;g.strokeRect(X(-ox/k),Y(-oy/k),W/k*sc,H/k*sc)}
