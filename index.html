@@ -272,7 +272,7 @@ var GEN=[{w:-1,n:0,d:0}].concat(BUBBLES.map(function(b,i){return{w:i,n:0,d:0}}))
 function genStep(){var t0=performance.now();
   while(genI<GEN.length&&performance.now()-t0<12){var g=GEN[genI],cnt=0,b=g.w>=0?BUBBLES[g.w]:null;
     while(g.d<g.n&&cnt<2500){var r,a,x,y,c,q;
-      if(!b){r=ZONES[0].r*Math.pow(R(),0.62);a=R()*6.2832;x=r*Math.cos(a);y=r*Math.sin(a);q=R();if(inT(TERR[0],x,y))c=3;else if(inT(TERR[1],x,y))c=4;else c=q<0.6?0:q<0.85?1:2;B[c].push(x,y,0.5+R()*1.1)}
+      if(!b){r=ZONES[0].r*Math.pow(R(),0.62);a=R()*6.2832;x=r*Math.cos(a);y=r*Math.sin(a);q=R();c=q<0.6?0:q<0.85?1:2;B[c].push(x,y,0.5+R()*1.1)}
       else{r=b.r*0.97*Math.pow(R(),0.62);a=R()*6.2832;b.st[R()<0.75?1:0].push(r*Math.cos(a),r*Math.sin(a),0.5+R()*1.1)}
       g.d++;genDone++;cnt++}
     if(g.d>=g.n)genI++}
