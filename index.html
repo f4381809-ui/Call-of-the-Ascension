@@ -148,7 +148,7 @@ input[type=search]{width:100%;padding:9px 12px;border:1px solid var(--line);bord
     </div></details>
     <details class="sec" id="sec_ed" hidden><summary>🛠 Редактор карты</summary><div class="body">
       <button id="ed_on" class="pbtn"></button>
-      <div id="ed_tools" hidden><button class="pbtn" id="t_sel">☝ Выбрать</button><button class="pbtn" id="t_star">+ Исток</button><button class="pbtn" id="t_zone">+ Зона</button><button class="pbtn" id="t_pen">✏ Карандаш</button><button class="pbtn" id="t_line">〰 Линия</button><button class="pbtn" id="t_move">✥ Двигать</button><button class="pbtn" id="t_erase">🗑 Ластик</button><button class="pbtn" id="t_undo">↶ Отменить</button><p><small id="ed_hint"></small></p></div>
+      <div id="ed_tools" hidden><button class="pbtn" id="t_sel">☝ Выбрать</button><button class="pbtn" id="t_star">+ Исток</button><button class="pbtn" id="t_zone">+ Зона</button><button class="pbtn" id="t_lightstar">✦ Добавить звезду</button><button class="pbtn" id="t_pen">✏ Карандаш</button><button class="pbtn" id="t_line">〰 Линия</button><button class="pbtn" id="t_move">✥ Двигать</button><button class="pbtn" id="t_erase">🗑 Ластик</button><button class="pbtn" id="t_undo">↶ Отменить</button><p><small id="ed_hint"></small></p></div>
       <h4 class="sub">Управление территориями</h4><p class="note">Скрывает границы, цветную заливку и названия территорий. Все звёзды и ваши изменения остаются на месте.</p><div class="btns"><button id="clear_blood" class="pbtn">Убрать Кровавое пространство</button><button id="clear_dragon" class="pbtn">Убрать Драконье гнездо</button></div><div id="ed_zl"></div>
       <div class="btns"><button id="ed_cat" class="pbtn">🏷 Категории</button><button id="ed_xp" class="pbtn">Данные: экспорт / импорт</button></div>
     </div></details>
@@ -171,6 +171,15 @@ input[type=search]{width:100%;padding:9px 12px;border:1px solid var(--line);bord
   <label>Артефакты и предметы<textarea id="f_art" placeholder="Название и эффект (если известен)"></textarea></label>
   <label>Стартовый исток<select id="f_start"></select></label>
   <div class="row"><button type="button" class="pbtn" id="pcancel">Отмена</button><button type="submit" class="pbtn pri">Добавить на карту</button></div>
+ </form>
+</div>
+<div class="modal" id="sm" hidden>
+ <form class="card" id="sm_form">
+  <h2 id="sm_title">Новая звезда</h2>
+  <label>Название (необязательно)<input id="sm_name" maxlength="80" placeholder="Название звезды"></label>
+  <label>Цвет звезды<input type="color" id="sm_color" value="#dce8ff"></label>
+  <label>Размер<input type="number" id="sm_size" min="1" max="12" step="0.5" value="2"></label>
+  <div class="row"><button type="button" class="pbtn" id="sm_delete">Удалить</button><button type="button" class="pbtn" id="sm_cancel">Отмена</button><button type="submit" class="pbtn pri">Сохранить</button></div>
  </form>
 </div>
 <div class="modal" id="em" hidden>
@@ -307,6 +316,7 @@ function draw(){moveBubbles();
   var ZZ=UZ.slice();if(pen&&pen.length>1)ZZ.push({n:"",cx:0,cy:0,r:0,pts:pen,line:tool==="line",c:"255,255,255"});if(zd&&zd.r>0)ZZ.push({n:"",cx:zd.cx,cy:zd.cy,r:zd.r,c:"255,255,255"});
   ZZ.forEach(function(z){var sx=z.cx*k+ox,sy=z.cy*k+oy,rr=z.r*k;if(rr>0&&!z.line){var gg=ctx.createRadialGradient(sx,sy,0,sx,sy,rr*1.5);gg.addColorStop(0,"rgba("+z.c+",.18)");gg.addColorStop(1,"rgba("+z.c+",0)");ctx.fillStyle=gg;ctx.fillRect(sx-rr*1.5,sy-rr*1.5,rr*3,rr*3)}ctx.beginPath();if(z.pts){z.pts.forEach(function(q,i){var qx=q[0]*k+ox,qy=q[1]*k+oy;i?ctx.lineTo(qx,qy):ctx.moveTo(qx,qy)});if(!z.line)ctx.closePath()}else ctx.arc(sx,sy,rr,0,6.2832);ctx.shadowColor="rgb("+z.c+")";ctx.shadowBlur=22;if(!z.line){ctx.fillStyle="rgba("+z.c+",.16)";ctx.fill()}ctx.setLineDash(z.line?[]:[6,5]);ctx.strokeStyle="rgba("+z.c+",.9)";ctx.lineWidth=z.line?2.5:1.5;ctx.stroke();ctx.shadowBlur=0;ctx.setLineDash([]);
     if(z.n){ctx.font="600 13px system-ui,sans-serif";ctx.fillStyle="rgb("+z.c+")";ctx.textAlign="center";lbl(z.n,sx,(z.pts?z.ty*k+oy:sy-rr)-6)}});
+  CUSTOM_STARS.forEach(function(st){var sx=st.x*k+ox,sy=st.y*k+oy;if(sx<-30||sx>W+30||sy<-30||sy>H+30)return;var rr=Math.max(1,Math.min(12,+st.size||2));ctx.fillStyle=st.color||"#dce8ff";ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=9;ctx.beginPath();ctx.arc(sx,sy,Math.max(1.3,rr*Math.min(2,Math.sqrt(k/k0))),0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;if(st.name&&k/k0>6){ctx.font="12px system-ui,sans-serif";ctx.fillStyle="#fff";lbl(st.name,sx,sy-14)}});
   CST.forEach(function(s){var ct=catOf(s.cat);if(CATV[ct.id]===false)return;var sx=s.x*k+ox,sy=s.y*k+oy;if(sx<-40||sx>W+40||sy<-40||sy>H+40)return;ctx.beginPath();ctx.arc(sx,sy,12,0,6.2832);ctx.fillStyle="rgba(10,14,30,.85)";ctx.fill();ctx.strokeStyle="rgb("+ct.c+")";ctx.lineWidth=2;ctx.shadowColor="rgb("+ct.c+")";ctx.shadowBlur=10;ctx.stroke();ctx.shadowBlur=0;ctx.font="13px system-ui,sans-serif";ctx.fillStyle="#fff";ctx.textAlign="center";ctx.fillText(ct.e,sx,sy+4.5)});
   PLAYERS.forEach(function(pl){var trail=pl.trail;if(trail.length>1){ctx.beginPath();trail.forEach(function(p,i){var qx=p[0]*k+ox,qy=p[1]*k+oy;i?ctx.lineTo(qx,qy):ctx.moveTo(qx,qy)});ctx.lineTo(pl.x*k+ox,pl.y*k+oy);ctx.strokeStyle="hsla("+pl.h+",100%,65%,.5)";ctx.lineWidth=1.5;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([])}
   var px0=pl.x*k+ox,py0=pl.y*k+oy;ctx.beginPath();ctx.arc(px0,py0,(plSel&&pl===cur?16:11),0,6.2832);ctx.fillStyle="hsla("+pl.h+",100%,65%,.2)";ctx.fill();
@@ -315,7 +325,7 @@ function draw(){moveBubbles();
   svView();drawMini();document.getElementById("sc").textContent="Масштаб ×"+(k/k0).toFixed(1)+(cc?" · x "+cc[0]+", y "+cc[1]:"")+(genI<GEN.length?" · звёзды "+fmtn(genDone)+" / "+fmtn(genTot):" · "+fmtn(genTot)+" истоков");
 }
 function zoomAt(f,mx,my){var nk=Math.min(k0*400,Math.max(k0*0.9,k*f));ox=mx-(mx-ox)*(nk/k);oy=my-(my-oy)*(nk/k);k=nk;draw()}
-var PLAYERS=[],cur=null,plSel=false,an=null,STORE="istoki-players-v1";var UZ=[],CST=[];
+var CUSTOM_STARS=[],STAR_EDIT=null;var PLAYERS=[],cur=null,plSel=false,an=null,STORE="istoki-players-v1";var UZ=[],CST=[];
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function save(){try{localStorage.setItem(STORE,JSON.stringify(PLAYERS))}catch(e){}}
 function load(){try{var s=JSON.parse(localStorage.getItem(STORE)||"null");if(s&&s.length)PLAYERS=s}catch(e){}
@@ -335,8 +345,8 @@ function moveTo(x,y,w){var p=cur;if(!p)return;if(!ADMIN){toast("Игроков �
   p.tr={t0:Date.now(),dur:Math.max(TRAVEL.min,d/TRAVEL.speed*1000),w:w,fb:fb,fx:fb>=0?p.x-BUBBLES[fb].cx:p.x,fy:fb>=0?p.y-BUBBLES[fb].cy:p.y,tx:w>=0?x-BUBBLES[w].cx:x,ty:w>=0?y-BUBBLES[w].cy:y};
   plSel=false;save();plInfo();startTrav()}
 var editOn=false,tool=null,zd=null,pen=null,mv=null,CKEY="istoki-custom-v1",ED=null,$=function(i){return document.getElementById(i)};
-function loadEd(){try{var s=JSON.parse(localStorage.getItem(CKEY)||"null");if(!s&&BASE)s=BASE;if(s){CST=s.CST||[];UZ=s.UZ||[];if(s.CATS&&s.CATS.length)CATS=s.CATS;if(s.OV&&typeof s.OV==="object")OV=s.OV}}catch(e){}}
-function saveEd(){if(API){schedulePub();return}try{localStorage.setItem(CKEY,JSON.stringify({CST:CST,UZ:UZ,CATS:CATS,OV:OV}))}catch(e){}}
+function loadEd(){try{var s=JSON.parse(localStorage.getItem(CKEY)||"null");if(!s&&BASE)s=BASE;if(s){CST=s.CST||[];UZ=s.UZ||[];CUSTOM_STARS=s.CUSTOM_STARS||[];if(s.CATS&&s.CATS.length)CATS=s.CATS;if(s.OV&&typeof s.OV==="object")OV=s.OV}}catch(e){}}
+function saveEd(){if(API){schedulePub();return}try{localStorage.setItem(CKEY,JSON.stringify({CST:CST,UZ:UZ,CUSTOM_STARS:CUSTOM_STARS,CATS:CATS,OV:OV}))}catch(e){}}
 function syncNamed(){for(var i=NAMED.length-1;i>=0;i--)if(NAMED[i][4])NAMED.splice(i,1);
   CST.forEach(function(s){NAMED.push([s.name,s.x,s.y,s.desc||"",s.id,s.cat])});
   var sel=$("f_start");sel.innerHTML="";NAMED.forEach(function(n,i){var o=document.createElement("option");o.value=i;o.textContent=n[0];sel.appendChild(o)});
@@ -348,11 +358,16 @@ function showEd(){var kd=ED.kind,st=kd==="star",bs=kd==="bstar",zn=kd==="zone",o
   $("em_xyl").hidden=!st;$("em_rl").hidden=!zn||ED.isNew;$("em_x").value=st?Math.round(o.x):"";$("em_y").value=st?Math.round(o.y):"";$("em_r").value=100;
   $("em_del").hidden=ED.isNew||bs;$("em_dup").hidden=ED.isNew||bs;$("em_del").dataset.c="";$("em_del").textContent="Удалить";$("em").hidden=false;$("em_name").focus()}
 function openBuiltin(n){ED={kind:"bstar",o:n,isNew:false};showEd()}
+function openLightStar(o){if(!need())return;STAR_EDIT={o:o,isNew:!o.id};$("sm_title").textContent=STAR_EDIT.isNew?"Новая звезда":"Изменить звезду";$("sm_name").value=o.name||"";$("sm_color").value=/^#[0-9a-f]{6}$/i.test(o.color||"")?o.color:"#dce8ff";$("sm_size").value=o.size||2;$("sm_delete").hidden=STAR_EDIT.isNew;$("sm").hidden=false}
+$("sm_cancel").onclick=function(){$("sm").hidden=true};
+$("sm").addEventListener("click",function(e){if(e.target===this)this.hidden=true});
+$("sm_form").onsubmit=function(e){e.preventDefault();if(!need()||!STAR_EDIT)return;snap();var o=STAR_EDIT.o;o.name=$("sm_name").value.trim();o.color=$("sm_color").value;o.size=Math.max(1,Math.min(12,parseFloat($("sm_size").value)||2));if(STAR_EDIT.isNew){o.id=Date.now()+Math.random();CUSTOM_STARS.push(o)}saveEd();$("sm").hidden=true;draw()};
+$("sm_delete").onclick=function(){if(!need()||!STAR_EDIT||STAR_EDIT.isNew)return;snap();CUSTOM_STARS.splice(CUSTOM_STARS.indexOf(STAR_EDIT.o),1);saveEd();$("sm").hidden=true;draw()};
 function openStar(o){ED={kind:"star",o:o,isNew:!o.id};showEd()}
 function openZone(o){ED={kind:"zone",o:o,isNew:!o.id};showEd()}
 function edUi(){if(editOn)$("sec_ed").open=true;$("ed_on").textContent=editOn?"✎ Выключить редактирование":"✎ Включить редактирование";$("ed_tools").hidden=!editOn;
-  $("t_star").className="pbtn"+(tool==="star"?" pri":"");$("t_zone").className="pbtn"+(tool==="zone"?" pri":"");$("t_pen").className="pbtn"+(tool==="pen"?" pri":"");["sel","line","move","erase"].forEach(function(t){$("t_"+t).className="pbtn"+(tool===t?" pri":"")});
-  $("ed_hint").textContent=tool==="star"?"Нажмите на карту, где будет новый исток. Нажмите на свой исток с золотым кольцом, чтобы изменить.":tool==="zone"?"Нажмите и тяните по карте, чтобы нарисовать круг зоны.":tool==="pen"?"Зажмите и рисуйте контур зоны от руки. Когда отпустите, контур замкнётся.":tool==="sel"?"Нажмите на любой исток, зону или линию, чтобы изменить (в том числе встроенные истоки).":tool==="line"?"Зажмите и рисуйте линию от руки: маршрут, границу, путь.":tool==="move"?"Зажмите свой исток, зону или линию и перетащите.":tool==="erase"?"Нажмите на свой исток, зону или линию, чтобы удалить.":"Выберите, что добавить."}
+  $("t_lightstar").className="pbtn"+(tool==="lightstar"?" pri":"");$("t_star").className="pbtn"+(tool==="star"?" pri":"");$("t_zone").className="pbtn"+(tool==="zone"?" pri":"");$("t_pen").className="pbtn"+(tool==="pen"?" pri":"");["sel","line","move","erase"].forEach(function(t){$("t_"+t).className="pbtn"+(tool===t?" pri":"")});
+  $("ed_hint").textContent=tool==="lightstar"?"Нажмите на карту, чтобы добавить звезду и выбрать её цвет.":tool==="star"?"Нажмите на карту, где будет новый исток. Нажмите на свой исток с золотым кольцом, чтобы изменить.":tool==="zone"?"Нажмите и тяните по карте, чтобы нарисовать круг зоны.":tool==="pen"?"Зажмите и рисуйте контур зоны от руки. Когда отпустите, контур замкнётся.":tool==="sel"?"Нажмите на любой исток, зону или линию, чтобы изменить (в том числе встроенные истоки).":tool==="line"?"Зажмите и рисуйте линию от руки: маршрут, границу, путь.":tool==="move"?"Зажмите свой исток, зону или линию и перетащите.":tool==="erase"?"Нажмите на свой исток, зону или линию, чтобы удалить.":"Выберите, что добавить."}
 function inZ(z,x,y){if(z.line)return false;if(!z.pts)return Math.hypot(x-z.cx,y-z.cy)<z.r;var c=false,p=z.pts;for(var i=0,j=p.length-1;i<p.length;j=i++)if((p[i][1]>y)!=(p[j][1]>y)&&x<(p[j][0]-p[i][0])*(y-p[i][1])/(p[j][1]-p[i][1])+p[i][0])c=!c;return c}
 function penDone(p){var th=[p[0]];p.forEach(function(q){var l=th[th.length-1];if(Math.hypot(q[0]-l[0],q[1]-l[1])*k>6)th.push(q)});if(th.length<5)return;var ln=tool==="line";p=smooth(th,2,ln);var sx=0,sy=0,ty=1e9;p.forEach(function(q){sx+=q[0];sy+=q[1];if(q[1]<ty)ty=q[1]});var cx=sx/p.length,cy=sy/p.length,r=0;p.forEach(function(q){r=Math.max(r,Math.hypot(q[0]-cx,q[1]-cy))});
   if(r*k<14)return;openZone({line:ln,cx:cx,cy:cy,r:r,ty:ty,pts:p.map(function(q){return[+q[0].toFixed(1),+q[1].toFixed(1)]})})}
@@ -497,11 +512,11 @@ function lvCheck(now){now=now||Date.now();var h=Math.floor(now/3600000),ph=now-h
   var el=$("lv_next");if(el)el.textContent="Левиафан: следующий через "+fmt((h+1)*3600000-now)+" (каждый час, на 15 секунд)"}
 var SHARED=false,REV=-1,TOKEN=null,pubT=0,pubBusy=false,pubDirty=false;
 function defPlayer(){return{id:1,name:"Игрок 1",race:"",age:"",acq:"",pas:"",rac:"",kno:"",art:"",x:-80,y:120,h:150,b:-1,trail:[[-80,120]]}}
-function sharedState(){return{CST:CST,UZ:UZ,CATS:CATS,OV:OV,CFG:CFG,ZONE_HIDDEN:ZONE_HIDDEN}}
+function sharedState(){return{CUSTOM_STARS:CUSTOM_STARS,CST:CST,UZ:UZ,CATS:CATS,OV:OV,CFG:CFG,ZONE_HIDDEN:ZONE_HIDDEN}}
 function pubSt(t){var e=$("pub_st");if(e)e.textContent=t}
 function tokenValid(t){if(!t)return false;try{var p=JSON.parse(atob(String(t).split(".")[1].replace(/-/g,"+").replace(/_/g,"/")));return p.exp*1000>Date.now()+30000}catch(e){return false}}
 function applyShared(d){if(!d||typeof d!=="object")return;var id=cur&&cur.id;
-  CST=Array.isArray(d.CST)?d.CST:[];UZ=Array.isArray(d.UZ)?d.UZ:[];if(Array.isArray(d.CATS)&&d.CATS.length)CATS=d.CATS;
+  CUSTOM_STARS=Array.isArray(d.CUSTOM_STARS)?d.CUSTOM_STARS:[];CST=Array.isArray(d.CST)?d.CST:[];UZ=Array.isArray(d.UZ)?d.UZ:[];if(Array.isArray(d.CATS)&&d.CATS.length)CATS=d.CATS;
   OV=d.OV&&typeof d.OV==="object"?d.OV:{stars:{},worlds:{}};CFG=d.CFG&&typeof d.CFG==="object"?d.CFG:null;ZONE_HIDDEN={blood:!!(d.ZONE_HIDDEN&&d.ZONE_HIDDEN.blood),dragon:!!(d.ZONE_HIDDEN&&d.ZONE_HIDDEN.dragon)};updateStarCleaner();
   clean();cur=PLAYERS.filter(function(p){return p.id===id})[0]||PLAYERS[0];plSel=false;applyCfg();applyOv();plInfo();if(ADMIN)cfUi();startTrav();draw()}
 function updateStarCleaner(){var a=$("clear_blood"),b=$("clear_dragon");if(a)a.textContent=ZONE_HIDDEN.blood?"Вернуть Кровавое пространство":"Убрать Кровавое пространство";if(b)b.textContent=ZONE_HIDDEN.dragon?"Вернуть Драконье гнездо":"Убрать Драконье гнездо"}
@@ -543,12 +558,12 @@ function miniGo(e){var r=mm.getBoundingClientRect(),T=mmT(),wx=((e.clientX-r.lef
 var mdn=false;mm.addEventListener("pointerdown",function(e){mdn=true;mm.setPointerCapture(e.pointerId);miniGo(e)});mm.addEventListener("pointermove",function(e){if(mdn)miniGo(e)});mm.addEventListener("pointerup",function(){mdn=false});
 function smooth(p,n,open){for(var t=0;t<n;t++){var o=open?[p[0]]:[],L=open?p.length-1:p.length;for(var i=0;i<L;i++){var a=p[i],b=p[(i+1)%p.length];o.push([.75*a[0]+.25*b[0],.75*a[1]+.25*b[1]],[.25*a[0]+.75*b[0],.25*a[1]+.75*b[1]])}if(open)o.push(p[p.length-1]);p=o}return p}
 var UNDO=[],tmo=0;
-function snap(){UNDO.push(JSON.stringify({CST:CST,UZ:UZ}));if(UNDO.length>30)UNDO.shift()}
+function snap(){UNDO.push(JSON.stringify({CST:CST,UZ:UZ,CUSTOM_STARS:CUSTOM_STARS}));if(UNDO.length>30)UNDO.shift()}
 function toast(m){var t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(tmo);tmo=setTimeout(function(){t.hidden=true},3500)}
-function undo(){var s=UNDO.pop();if(!s){toast("Нечего отменять");return}var o=JSON.parse(s);CST=o.CST;UZ=o.UZ;saveEd();syncNamed();draw()}
+function undo(){var s=UNDO.pop();if(!s){toast("Нечего отменять");return}var o=JSON.parse(s);CST=o.CST;UZ=o.UZ;CUSTOM_STARS=o.CUSTOM_STARS||[];saveEd();syncNamed();draw()}
 function wOf(x,y){for(var i=0;i<BUBBLES.length;i++)if(Math.hypot(x-BUBBLES[i].cx,y-BUBBLES[i].cy)<BUBBLES[i].r)return i;return -1}
 function nearLine(p,x,y,tol){for(var i=0;i<p.length-1;i++){var ax=p[i][0],ay=p[i][1],dx=p[i+1][0]-ax,dy=p[i+1][1]-ay,L=dx*dx+dy*dy,t=L?Math.max(0,Math.min(1,((x-ax)*dx+(y-ay)*dy)/L)):0;if(Math.hypot(ax+t*dx-x,ay+t*dy-y)<tol)return true}return false}
-function hitUser(mx,my){var wx=(mx-ox)/k,wy=(my-oy)/k,i;for(i=CST.length-1;i>=0;i--)if(CATV[catOf(CST[i].cat).id]!==false&&Math.hypot(CST[i].x*k+ox-mx,CST[i].y*k+oy-my)<14)return{kind:"star",o:CST[i]};
+function hitUser(mx,my){for(var j=CUSTOM_STARS.length-1;j>=0;j--)if(Math.hypot(CUSTOM_STARS[j].x*k+ox-mx,CUSTOM_STARS[j].y*k+oy-my)<12)return{kind:"lightstar",o:CUSTOM_STARS[j]};var wx=(mx-ox)/k,wy=(my-oy)/k,i;for(i=CST.length-1;i>=0;i--)if(CATV[catOf(CST[i].cat).id]!==false&&Math.hypot(CST[i].x*k+ox-mx,CST[i].y*k+oy-my)<14)return{kind:"star",o:CST[i]};
   for(i=UZ.length-1;i>=0;i--){var z=UZ[i];if(z.line?nearLine(z.pts,wx,wy,10/k):inZ(z,wx,wy))return{kind:"zone",o:z}}return null}
 function items(){var a=[];NAMED.forEach(function(n){a.push({t:"Исток",n:n[0],f:function(){fit(n[1],n[2],150)}})});
   ZONES.forEach(function(z){a.push({t:"Область",n:z.n,f:function(){fit(0,0,z.r)}})});
@@ -560,13 +575,13 @@ $("q").addEventListener("input",function(){var v=this.value.trim().toLowerCase()
 var P={},moved=0,pd=0;
 cv.addEventListener("wheel",function(e){e.preventDefault();var r=cv.getBoundingClientRect();zoomAt(e.deltaY<0?1.25:0.8,e.clientX-r.left,e.clientY-r.top)},{passive:false});
 cv.addEventListener("pointerdown",function(e){P[e.pointerId]={x:e.clientX,y:e.clientY};moved=0;cv.classList.add("drag");var ks=Object.keys(P);if(ks.length==2)pd=Math.hypot(P[ks[0]].x-P[ks[1]].x,P[ks[0]].y-P[ks[1]].y)});
-window.addEventListener("pointermove",function(e){var p=P[e.pointerId];if(!p)return;if(mv){var r3=cv.getBoundingClientRect(),wx=(e.clientX-r3.left-ox)/k,wy=(e.clientY-r3.top-oy)/k,ddx=wx-mv.lx,ddy=wy-mv.ly;if(!mv.sn){snap();mv.sn=true}var o=mv.o;if(mv.kind==="star"){o.x+=ddx;o.y+=ddy}else{o.cx+=ddx;o.cy+=ddy;if(o.pts){o.pts.forEach(function(q){q[0]+=ddx;q[1]+=ddy});o.ty+=ddy}}mv.lx=wx;mv.ly=wy;draw();return}if(pen){var r2=cv.getBoundingClientRect(),qx=(e.clientX-r2.left-ox)/k,qy=(e.clientY-r2.top-oy)/k,lp=pen[pen.length-1];if(Math.hypot(qx-lp[0],qy-lp[1])*k>3){pen.push([qx,qy]);draw()}return}if(zd){var r0=cv.getBoundingClientRect();zd.r=Math.hypot((e.clientX-r0.left-ox)/k-zd.cx,(e.clientY-r0.top-oy)/k-zd.cy);draw();return}var ks=Object.keys(P),r=cv.getBoundingClientRect();
+window.addEventListener("pointermove",function(e){var p=P[e.pointerId];if(!p)return;if(mv){var r3=cv.getBoundingClientRect(),wx=(e.clientX-r3.left-ox)/k,wy=(e.clientY-r3.top-oy)/k,ddx=wx-mv.lx,ddy=wy-mv.ly;if(!mv.sn){snap();mv.sn=true}var o=mv.o;if(mv.kind==="star"||mv.kind==="lightstar"){o.x+=ddx;o.y+=ddy}else{o.cx+=ddx;o.cy+=ddy;if(o.pts){o.pts.forEach(function(q){q[0]+=ddx;q[1]+=ddy});o.ty+=ddy}}mv.lx=wx;mv.ly=wy;draw();return}if(pen){var r2=cv.getBoundingClientRect(),qx=(e.clientX-r2.left-ox)/k,qy=(e.clientY-r2.top-oy)/k,lp=pen[pen.length-1];if(Math.hypot(qx-lp[0],qy-lp[1])*k>3){pen.push([qx,qy]);draw()}return}if(zd){var r0=cv.getBoundingClientRect();zd.r=Math.hypot((e.clientX-r0.left-ox)/k-zd.cx,(e.clientY-r0.top-oy)/k-zd.cy);draw();return}var ks=Object.keys(P),r=cv.getBoundingClientRect();
   if(ks.length==2){P[e.pointerId]={x:e.clientX,y:e.clientY};var d=Math.hypot(P[ks[0]].x-P[ks[1]].x,P[ks[0]].y-P[ks[1]].y);
     if(pd>0)zoomAt(d/pd,(P[ks[0]].x+P[ks[1]].x)/2-r.left,(P[ks[0]].y+P[ks[1]].y)/2-r.top);pd=d;moved=99;return}
   var dx=e.clientX-p.x,dy=e.clientY-p.y;moved+=Math.abs(dx)+Math.abs(dy);ox+=dx;oy+=dy;P[e.pointerId]={x:e.clientX,y:e.clientY};draw()});
 window.addEventListener("pointerup",function(e){if(!P[e.pointerId])return;delete P[e.pointerId];cv.classList.remove("drag");if(mv){mv=null;saveEd();syncNamed();draw();return}if(pen){var pp=pen;pen=null;penDone(pp);draw();return}if(zd){var zz0=zd;zd=null;if(zz0.r*k>12)openZone(zz0);draw();return}
   if(moved<5&&e.target===cv){var r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top,best=null,bd=18;
-    if(editOn&&tool==="sel"){var hh=hitUser(mx,my);if(hh){hh.kind==="star"?openStar(hh.o):openZone(hh.o);return}var bn=null,bdd=14;NAMED.forEach(function(n){if(n[4])return;var d=Math.hypot(n[1]*k+ox-mx,n[2]*k+oy-my);if(d<bdd){bdd=d;bn=n}});if(bn)openBuiltin(bn);return}if(editOn&&tool==="move")return;if(editOn&&tool==="erase"){var h=hitUser(mx,my);if(h){snap();var a=h.kind==="star"?CST:UZ;a.splice(a.indexOf(h.o),1);saveEd();syncNamed();draw()}return}if(editOn){var hs=null;CST.forEach(function(s){if(Math.hypot(s.x*k+ox-mx,s.y*k+oy-my)<14)hs=s});if(hs){openStar(hs);return}if(tool==="star"){openStar({x:(mx-ox)/k,y:(my-oy)/k});return}}
+    if(editOn&&tool==="sel"){var hh=hitUser(mx,my);if(hh){hh.kind==="lightstar"?openLightStar(hh.o):hh.kind==="star"?openStar(hh.o):openZone(hh.o);return}var bn=null,bdd=14;NAMED.forEach(function(n){if(n[4])return;var d=Math.hypot(n[1]*k+ox-mx,n[2]*k+oy-my);if(d<bdd){bdd=d;bn=n}});if(bn)openBuiltin(bn);return}if(editOn&&tool==="move")return;if(editOn&&tool==="erase"){var h=hitUser(mx,my);if(h){snap();var a=h.kind==="lightstar"?CUSTOM_STARS:h.kind==="star"?CST:UZ;a.splice(a.indexOf(h.o),1);saveEd();syncNamed();draw()}return}if(editOn){var hs=null;CST.forEach(function(s){if(Math.hypot(s.x*k+ox-mx,s.y*k+oy-my)<14)hs=s});if(hs){openStar(hs);return}if(tool==="star"){openStar({x:(mx-ox)/k,y:(my-oy)/k});return}if(tool==="lightstar"){openLightStar({x:(mx-ox)/k,y:(my-oy)/k,color:"#dce8ff",size:2});return}}
     if(1){var hp=null;PLAYERS.forEach(function(p){if(Math.hypot(p.x*k+ox-mx,p.y*k+oy-my)<16)hp=p});
       if(hp){if(!ADMIN){cur=hp;plSel=false}else if(hp===cur)plSel=!plSel;else{cur=hp;plSel=true}plInfo();draw();return}
       if(plSel){var tg=null,nd=18;NAMED.forEach(function(n){var d=Math.hypot(n[1]*k+ox-mx,n[2]*k+oy-my);if(d<nd){nd=d;tg=[n[1],n[2],n.b>=0?n.b:-1]}});if(!tg)tg=nearStar(mx,my,28);if(tg){moveTo(tg[0],tg[1],tg[2])}return}}
@@ -588,6 +603,7 @@ document.querySelectorAll("[data-t]").forEach(function(b){b.onclick=function(){v
   setW(p,n.b>=0?n.b:-1,p.x,p.y);PLAYERS.push(p);cur=p;plSel=false;save();close();plInfo();fit(p.x,p.y,240)}})();
 $("ed_on").onclick=function(){editOn=!editOn;if(!editOn)tool=null;edUi()};
 $("t_star").onclick=function(){tool=tool==="star"?null:"star";edUi()};
+$("t_lightstar").onclick=function(){tool=tool==="lightstar"?null:"lightstar";edUi()};
 $("t_zone").onclick=function(){tool=tool==="zone"?null:"zone";edUi()};
 $("t_pen").onclick=function(){tool=tool==="pen"?null:"pen";edUi()};
 ["line","move","erase"].forEach(function(t){$("t_"+t).onclick=function(){tool=tool===t?null:t;edUi()}});$("t_undo").onclick=undo;
@@ -600,10 +616,10 @@ $("em_cancel").onclick=function(){$("em").hidden=true};
 $("em").addEventListener("click",function(e){if(e.target===this)this.hidden=true});
 $("em_del").onclick=function(){if(this.dataset.c!=="1"){this.dataset.c="1";this.textContent="Нажмите ещё раз";return}
   snap();var a=ED.kind==="star"?CST:UZ;a.splice(a.indexOf(ED.o),1);saveEd();$("em").hidden=true;syncNamed();draw()};
-$("ed_xp").onclick=function(){$("xm_t").value=JSON.stringify({CST:CST,UZ:UZ,CATS:CATS,OV:OV,CFG:CFG,PLAYERS:PLAYERS});$("xm_msg").textContent="";$("xm").hidden=false};
+$("ed_xp").onclick=function(){$("xm_t").value=JSON.stringify({CST:CST,UZ:UZ,CUSTOM_STARS:CUSTOM_STARS,CATS:CATS,OV:OV,CFG:CFG,PLAYERS:PLAYERS});$("xm_msg").textContent="";$("xm").hidden=false};
 $("xm_close").onclick=function(){$("xm").hidden=true};
 $("xm_copy").onclick=function(){var t=$("xm_t");t.select();try{document.execCommand("copy");$("xm_msg").textContent="Скопировано."}catch(e){$("xm_msg").textContent="Выделите текст и скопируйте вручную."}};
-$("xm_apply").onclick=function(){try{var s=JSON.parse($("xm_t").value);CST=s.CST||[];UZ=s.UZ||[];if(s.CATS&&s.CATS.length)CATS=s.CATS;if(s.OV)OV=s.OV;if(s.CFG){CFG=s.CFG;saveCfg();applyCfg();cfUi()}if(s.PLAYERS&&s.PLAYERS.length){PLAYERS=s.PLAYERS;cur=PLAYERS[0]}clean();cur=PLAYERS[0];save();saveEd();applyOv();plInfo();draw();$("xm").hidden=true}catch(e){$("xm_msg").textContent="Не удалось прочитать данные."}};
+$("xm_apply").onclick=function(){try{var s=JSON.parse($("xm_t").value);CST=s.CST||[];UZ=s.UZ||[];CUSTOM_STARS=s.CUSTOM_STARS||[];if(s.CATS&&s.CATS.length)CATS=s.CATS;if(s.OV)OV=s.OV;if(s.CFG){CFG=s.CFG;saveCfg();applyCfg();cfUi()}if(s.PLAYERS&&s.PLAYERS.length){PLAYERS=s.PLAYERS;cur=PLAYERS[0]}clean();cur=PLAYERS[0];save();saveEd();applyOv();plInfo();draw();$("xm").hidden=true}catch(e){$("xm_msg").textContent="Не удалось прочитать данные."}};
 $("ev_sp").onclick=function(){sk.v0=vt();sk.t0=Date.now();sk.spd=sk.spd===1?CONV.period*1000/60000:1;this.textContent=sk.spd===1?"⏩ Цикл за минуту":"⏸ Обычная скорость";draw()};
 $("ev_go").onclick=function(){var T=CONV.period*1000,v=vt();sk.v0=v-(((v-CONV.start)%T+T)%T)+T;sk.t0=Date.now();draw()};
 $("ev_rs").onclick=function(){sk.v0=Date.now();sk.t0=Date.now();sk.spd=1;$("ev_sp").textContent="⏩ Цикл за минуту";draw()};
