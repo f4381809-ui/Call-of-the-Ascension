@@ -87,6 +87,16 @@ input[type=search]{width:100%;padding:9px 12px;border:1px solid var(--line);bord
 .wrow input:not([type=color]){flex:1;min-width:0;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--ink);font:inherit}
 .two{display:flex;gap:8px}.two input{flex:1;min-width:0}
 @media (max-width:860px){.ticker{max-width:calc(100% - 24px);bottom:122px}}
+.tb{position:absolute;left:12px;top:64px;display:flex;flex-direction:column;gap:8px;z-index:4}.tb[hidden]{display:none}
+.tb .tg{display:flex;flex-direction:column;background:rgba(12,17,40,.74);border:1px solid rgba(138,164,255,.28);border-radius:12px;padding:4px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.tb button{width:58px;padding:6px 2px 4px;margin:0;border:0;border-radius:9px;background:transparent;color:#cfd8ff;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;font:inherit}
+.tb button i{font-style:normal;font-size:18px;line-height:1.15}.tb button span{font-size:.62rem;opacity:.85}
+.tb button:hover{background:rgba(138,164,255,.18)}.tb button.pri{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.hint{position:absolute;left:50%;top:12px;transform:translateX(-50%);max-width:calc(100% - 600px);background:rgba(12,17,40,.8);border:1px solid rgba(138,164,255,.3);color:#dfe5ff;border-radius:999px;padding:5px 14px;font-size:.8rem;z-index:4;text-align:center}.hint[hidden]{display:none}
+.wrow input[type=checkbox]{flex:none;width:18px;height:18px;padding:0;accent-color:var(--accent);cursor:pointer}
+.wrow input:not([type=color]):not([type=checkbox]){flex:1}
+.reg button[hidden]{display:none}
+@media (max-width:860px){.tb{top:auto;bottom:124px;left:8px;flex-direction:row;max-width:calc(100% - 16px);overflow-x:auto}.tb .tg{flex-direction:row}.tb button{width:46px}.hint{top:auto;bottom:178px;max-width:calc(100% - 24px)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -103,6 +113,11 @@ input[type=search]{width:100%;padding:9px 12px;border:1px solid var(--line);bord
     <div class="scale" id="sc"></div>
     <div class="toast" id="toast" hidden></div>
     <div class="ticker" id="tick" hidden></div>
+    <div class="hint" id="hintbox" hidden><small id="ed_hint"></small></div>
+    <div id="ed_tools" class="tb" hidden>
+      <div class="tg"><button type="button" class="pbtn" id="t_sel" title="Выбрать и изменить любой объект"><i>☝</i><span>Выбрать</span></button><button type="button" class="pbtn" id="t_move" title="Двигать"><i>✥</i><span>Двигать</span></button><button type="button" class="pbtn" id="t_erase" title="Стереть"><i>🗑</i><span>Стереть</span></button><button type="button" class="pbtn" id="t_undo" title="Отменить последнее"><i>↶</i><span>Назад</span></button></div>
+      <div class="tg"><button type="button" class="pbtn" id="t_star" title="Исток с категорией"><i>＋</i><span>Исток</span></button><button type="button" class="pbtn" id="t_lightstar" title="Светящаяся звезда"><i>✦</i><span>Звезда</span></button><button type="button" class="pbtn" id="t_zone" title="Круглая зона"><i>◯</i><span>Зона</span></button><button type="button" class="pbtn" id="t_pen" title="Контур зоны от руки"><i>✏</i><span>Контур</span></button><button type="button" class="pbtn" id="t_line" title="Линия, маршрут"><i>〰</i><span>Линия</span></button></div>
+    </div>
     <div class="evt" id="evt"><span id="evt_t"></span><div class="evb"><button id="ev_sp">⏩ Цикл за минуту</button><button id="ev_go">К началу схождения</button><button id="ev_rs">Реальное время</button></div></div>
     <canvas id="mm" class="mini" aria-label="Мини-карта"></canvas>
   </div>
@@ -118,42 +133,53 @@ input[type=search]{width:100%;padding:9px 12px;border:1px solid var(--line);bord
       <button class="sub" data-t="0"><span class="dot" style="background:#ff4d5e"></span>Кровавое пространство</button>
       <button class="sub" data-t="1"><span class="dot" style="background:#b57cff"></span>Драконье гнездо</button>
     </div></details>
-    <details class="sec" open><summary>👤 Игроки</summary><div class="body">
-      <div id="plist"></div>
-      <div class="info" id="pl"></div>
-      <div class="btns"><button id="pf" class="pbtn">Показать игрока</button><button id="pa" class="pbtn">+ Добавить игрока</button><button id="pe" class="pbtn">✎ Изменить игрока</button></div>
-    </div></details>
     <details class="sec"><summary>🏷 Категории мест</summary><div class="body"><div class="chips" id="cat_f"></div></div></details>
-    <details class="sec" id="sec_adm" open><summary>🔐 Админ</summary><div class="body">
-      <div id="adm_out"><p class="note">Редактировать карту, добавлять и удалять игроков может только администратор. Остальные посетители видят общую карту. Игроки хранятся отдельно в каждом браузере.</p><div class="btns"><button id="adm_login" class="pbtn pri">Войти</button></div></div>
+    <details class="sec" open><summary>ℹ️ Информация</summary><div class="body">
+      <div class="info" id="info"><small>Приблизьте карту и нажмите на подписанный исток или на любое место.</small></div>
+    </div></details>
+    <details class="sec" id="sec_adm" open><summary>🔐 Администратор</summary><div class="body">
+      <div id="adm_out"><p class="note">Редактировать карту, управлять игроками и ивентами может только администратор.</p><div class="btns"><button id="adm_login" class="pbtn pri">Войти</button></div></div>
       <div id="adm_in" hidden>
         <p class="note">✅ Вы вошли как администратор.</p>
         <div class="btns"><button id="adm_logout" class="pbtn">Выйти</button></div>
         <p class="note" id="pub_st"></p>
-        <h4 class="sub">Миры: название и цвет</h4><div id="wl"></div>
-        <h4 class="sub">Цикл схождения и путь</h4>
-        <div class="form">
-          <label>Период цикла, дней<input type="number" id="cf_p" min="0.001" step="any"></label>
-          <label>Начало цикла (UTC)<input type="date" id="cf_s"></label>
-          <div class="g3"><label>Сближение, %<input type="number" id="cf_g" min="0" max="100" step="1"></label><label>Слияние, %<input type="number" id="cf_h" min="0" max="100" step="1"></label><label>Расхождение, %<input type="number" id="cf_a" min="0" max="100" step="1"></label></div>
-          <label>Скорость игрока, единиц в секунду<input type="number" id="cf_v" min="1" step="1"></label>
-          <div class="btns"><button id="cf_apply" class="pbtn pri">Применить</button><button id="cf_rst" class="pbtn">По умолчанию</button></div>
-        </div>
-        <h4 class="sub">Микро-ивенты</h4>
-        <div class="form"><label>Частота<select id="ev_f"><option value="0.5">Реже</option><option value="1">Обычно</option><option value="2">Чаще</option><option value="4">Очень часто</option></select></label>
-          <div class="btns"><button class="pbtn" id="evb_comet">☄ Комета</button><button class="pbtn" id="evb_meteors">✦ Метеоры</button><button class="pbtn" id="evb_nova">✺ Сверхновая</button><button class="pbtn" id="evb_wave">〰 Волна эфира</button><button class="pbtn" id="evb_aurora">❂ Сияние</button><button class="pbtn" id="evb_pulse">◎ Мерцание</button><button class="pbtn" id="evb_lv">🐋 Левиафан</button></div>
-          <p class="note" id="lv_next"></p>
-          <p class="note">Микро-ивенты только рисуют эффекты и ничего не меняют на карте.</p></div>
       </div>
     </div></details>
     <details class="sec" id="sec_ed" hidden><summary>🛠 Редактор карты</summary><div class="body">
       <button id="ed_on" class="pbtn"></button>
-      <div id="ed_tools" hidden><button class="pbtn" id="t_sel">☝ Выбрать</button><button class="pbtn" id="t_star">+ Исток</button><button class="pbtn" id="t_zone">+ Зона</button><button class="pbtn" id="t_lightstar">✦ Добавить звезду</button><button class="pbtn" id="t_pen">✏ Карандаш</button><button class="pbtn" id="t_line">〰 Линия</button><button class="pbtn" id="t_move">✥ Двигать</button><button class="pbtn" id="t_erase">🗑 Ластик</button><button class="pbtn" id="t_undo">↶ Отменить</button><p><small id="ed_hint"></small></p></div>
-      <h4 class="sub">Управление территориями</h4><p class="note">Скрывает границы, цветную заливку и названия территорий. Все звёзды и ваши изменения остаются на месте.</p><div class="btns"><button id="clear_blood" class="pbtn">Убрать Кровавое пространство</button><button id="clear_dragon" class="pbtn">Убрать Драконье гнездо</button></div><div id="ed_zl"></div>
-      <div class="btns"><button id="ed_cat" class="pbtn">🏷 Категории</button><button id="ed_xp" class="pbtn">Данные: экспорт / импорт</button></div>
+      <p class="note" style="margin-top:8px">Когда редактирование включено, инструменты появляются слева на карте.</p>
+      <div id="ed_zl"></div>
+      <h4 class="sub">Территории</h4><p class="note">Скрывает границы, заливку и названия. Звёзды и ваши изменения остаются на месте.</p>
+      <div class="btns"><button id="clear_blood" class="pbtn">Убрать Кровавое пространство</button><button id="clear_dragon" class="pbtn">Убрать Драконье гнездо</button></div>
+      <h4 class="sub">Данные</h4>
+      <div class="btns"><button id="ed_cat" class="pbtn">🏷 Категории</button><button id="ed_xp" class="pbtn">Экспорт / импорт</button></div>
     </div></details>
-    <details class="sec" open><summary>ℹ️ Информация</summary><div class="body">
-      <div class="info" id="info"><small>Приблизьте карту и нажмите на подписанный исток или на любое место.</small></div>
+    <details class="sec" id="sec_pl" hidden><summary>👤 Игроки (в этом браузере)</summary><div class="body">
+      <div id="plist"></div>
+      <div class="info" id="pl"></div>
+      <div class="btns"><button id="pf" class="pbtn">Показать игрока</button><button id="pa" class="pbtn">+ Добавить</button><button id="pe" class="pbtn">✎ Изменить</button></div>
+      <p class="note" style="margin-top:8px">Игроки хранятся отдельно в каждом браузере, посетители их не видят.</p>
+    </div></details>
+    <details class="sec" id="sec_wc" hidden><summary>🌐 Миры и цикл</summary><div class="body">
+      <h4 class="sub" style="margin-top:0">Названия, цвета и ивенты внутри мира (✨ галочка)</h4><div id="wl"></div>
+      <h4 class="sub">Цикл схождения и путь</h4>
+      <div class="form">
+        <label>Период цикла, дней<input type="number" id="cf_p" min="0.001" step="any"></label>
+        <label>Начало цикла (UTC)<input type="date" id="cf_s"></label>
+        <div class="g3"><label>Сближение, %<input type="number" id="cf_g" min="0" max="100" step="1"></label><label>Слияние, %<input type="number" id="cf_h" min="0" max="100" step="1"></label><label>Расхождение, %<input type="number" id="cf_a" min="0" max="100" step="1"></label></div>
+        <label>Скорость игрока, единиц в секунду<input type="number" id="cf_v" min="1" step="1"></label>
+        <div class="btns"><button id="cf_apply" class="pbtn pri">Применить</button><button id="cf_rst" class="pbtn">По умолчанию</button></div>
+      </div>
+    </div></details>
+    <details class="sec" id="sec_evt" hidden><summary>✨ Ивенты</summary><div class="body">
+      <div class="form"><label>Частота<select id="ev_f"><option value="0.5">Реже</option><option value="1">Обычно</option><option value="2">Чаще</option><option value="4">Очень часто</option></select></label></div>
+      <h4 class="sub">На всей карте</h4>
+      <div class="btns"><button class="pbtn" id="evb_comet">☄ Комета</button><button class="pbtn" id="evb_meteors">✦ Метеоры</button><button class="pbtn" id="evb_nova">✺ Сверхновая</button><button class="pbtn" id="evb_wave">〰 Волна эфира</button><button class="pbtn" id="evb_aurora">❂ Сияние</button><button class="pbtn" id="evb_pulse">◎ Мерцание</button><button class="pbtn" id="evb_lv">🐋 Левиафан</button></div>
+      <p class="note" id="lv_next"></p>
+      <h4 class="sub">Внутри миров</h4>
+      <div class="form"><label>Где<select id="evw_t"></select></label></div>
+      <div class="btns"><button class="pbtn" id="evw_storm">⚡ Гроза</button><button class="pbtn" id="evw_vortex">🌀 Вихрь</button><button class="pbtn" id="evw_fireflies">✨ Светляки</button><button class="pbtn" id="evw_mist">🌫 Туман</button><button class="pbtn" id="evw_eclipse">🌑 Затмение</button><button class="pbtn" id="evw_ripples">🔔 Эхо истока</button><button class="pbtn" id="evw_rockfall">☄ Каменный дождь</button><button class="pbtn" id="evw_rift">🕳 Разлом</button></div>
+      <p class="note" style="margin-top:8px">Случайные ивенты внутри миров включаются галочкой у мира в разделе «Миры и цикл». Ивенты только рисуют эффекты и ничего не меняют на карте.</p>
     </div></details>
   </aside>
 </div>
@@ -208,9 +234,9 @@ input[type=search]{width:100%;padding:9px 12px;border:1px solid var(--line);bord
  <div class="card">
   <h2>Как пользоваться картой</h2>
   <p><b>Карта.</b> Тяните мышью или пальцем, чтобы двигать. Колесо или щипок меняют масштаб. Клавиши: стрелки, + и −, 0 или Home для общего вида, Esc закрывает окна.</p>
-  <p><b>Игроки.</b> Добавляет и удаляет игроков администратор. Нажмите на игрока, затем на исток, и он отправится туда. В пути он проводит время, оно зависит от расстояния. Между мирами можно ходить только во время схождения.</p>
-  <p><b>Редактор.</b> Доступен только администратору: войдите в разделе «Админ». Инструменты: выбрать и изменить любой объект, места с категориями, зоны, линии, карандаш, двигать, стереть, отменить. Там же названия миров, настройки цикла и событий.</p>
-  <p><b>Микро-ивенты.</b> Кометы, метеоры, вспышки и другие эффекты. Они только красивые и ничего не меняют на карте. Кнопка ✨ включает и выключает их. Раз в час на 15 секунд сквозь пустоту проплывает левиафан: он съедает маленькое свечение и уплывает, сферы не трогает.</p>
+  <p><b>Администратор.</b> «Войти» в разделе «Администратор». Дальше открываются «Редактор карты», «Игроки», «Миры и цикл» и «Ивенты». Изменения сразу сохраняются для всех посетителей.</p>
+  <p><b>Инструменты.</b> Включите редактирование, и слева на карте появится панель: выбрать, двигать, стереть, назад, а ниже исток, звезда, зона, контур, линия.</p>
+  <p><b>Ивенты.</b> Кометы, метеоры, вспышки и левиафан показываются на всей карте. Гроза, вихрь, светляки, туман, затмение, эхо, каменный дождь и разлом происходят внутри миров. Они только рисуют эффекты и ничего не меняют. Кнопка ✨ включает и выключает их.</p>
   <div class="row"><button type="button" class="pbtn" id="hm_close">Понятно</button></div>
  </div>
 </div>
@@ -318,7 +344,7 @@ function draw(){moveBubbles();
     if(z.n){ctx.font="600 13px system-ui,sans-serif";ctx.fillStyle="rgb("+z.c+")";ctx.textAlign="center";lbl(z.n,sx,(z.pts?z.ty*k+oy:sy-rr)-6)}});
   CUSTOM_STARS.forEach(function(st){var sx=st.x*k+ox,sy=st.y*k+oy;if(sx<-30||sx>W+30||sy<-30||sy>H+30)return;var rr=Math.max(1,Math.min(12,+st.size||2));ctx.fillStyle=st.color||"#dce8ff";ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=9;ctx.beginPath();ctx.arc(sx,sy,Math.max(1.3,rr*Math.min(2,Math.sqrt(k/k0))),0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;if(st.name&&k/k0>6){ctx.font="12px system-ui,sans-serif";ctx.fillStyle="#fff";lbl(st.name,sx,sy-14)}});
   CST.forEach(function(s){var ct=catOf(s.cat);if(CATV[ct.id]===false)return;var sx=s.x*k+ox,sy=s.y*k+oy;if(sx<-40||sx>W+40||sy<-40||sy>H+40)return;ctx.beginPath();ctx.arc(sx,sy,12,0,6.2832);ctx.fillStyle="rgba(10,14,30,.85)";ctx.fill();ctx.strokeStyle="rgb("+ct.c+")";ctx.lineWidth=2;ctx.shadowColor="rgb("+ct.c+")";ctx.shadowBlur=10;ctx.stroke();ctx.shadowBlur=0;ctx.font="13px system-ui,sans-serif";ctx.fillStyle="#fff";ctx.textAlign="center";ctx.fillText(ct.e,sx,sy+4.5)});
-  PLAYERS.forEach(function(pl){var trail=pl.trail;if(trail.length>1){ctx.beginPath();trail.forEach(function(p,i){var qx=p[0]*k+ox,qy=p[1]*k+oy;i?ctx.lineTo(qx,qy):ctx.moveTo(qx,qy)});ctx.lineTo(pl.x*k+ox,pl.y*k+oy);ctx.strokeStyle="hsla("+pl.h+",100%,65%,.5)";ctx.lineWidth=1.5;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([])}
+  (ADMIN?PLAYERS:[]).forEach(function(pl){var trail=pl.trail;if(trail.length>1){ctx.beginPath();trail.forEach(function(p,i){var qx=p[0]*k+ox,qy=p[1]*k+oy;i?ctx.lineTo(qx,qy):ctx.moveTo(qx,qy)});ctx.lineTo(pl.x*k+ox,pl.y*k+oy);ctx.strokeStyle="hsla("+pl.h+",100%,65%,.5)";ctx.lineWidth=1.5;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([])}
   var px0=pl.x*k+ox,py0=pl.y*k+oy;ctx.beginPath();ctx.arc(px0,py0,(plSel&&pl===cur?16:11),0,6.2832);ctx.fillStyle="hsla("+pl.h+",100%,65%,.2)";ctx.fill();
   ctx.beginPath();ctx.arc(px0,py0,6,0,6.2832);ctx.fillStyle="hsl("+pl.h+",100%,65%)";ctx.fill();ctx.lineWidth=2;ctx.strokeStyle="#fff";ctx.stroke();
   ctx.font="600 12px system-ui,sans-serif";ctx.fillStyle="hsl("+pl.h+",100%,70%)";ctx.textAlign="center";lbl(pl.name,px0,py0-20)});
@@ -365,7 +391,7 @@ $("sm_form").onsubmit=function(e){e.preventDefault();if(!need()||!STAR_EDIT)retu
 $("sm_delete").onclick=function(){if(!need()||!STAR_EDIT||STAR_EDIT.isNew)return;snap();CUSTOM_STARS.splice(CUSTOM_STARS.indexOf(STAR_EDIT.o),1);saveEd();$("sm").hidden=true;draw()};
 function openStar(o){ED={kind:"star",o:o,isNew:!o.id};showEd()}
 function openZone(o){ED={kind:"zone",o:o,isNew:!o.id};showEd()}
-function edUi(){if(editOn)$("sec_ed").open=true;$("ed_on").textContent=editOn?"✎ Выключить редактирование":"✎ Включить редактирование";$("ed_tools").hidden=!editOn;
+function edUi(){if(editOn)$("sec_ed").open=true;$("ed_on").textContent=editOn?"✎ Выключить редактирование":"✎ Включить редактирование";$("ed_tools").hidden=!editOn;$("hintbox").hidden=!editOn;
   $("t_lightstar").className="pbtn"+(tool==="lightstar"?" pri":"");$("t_star").className="pbtn"+(tool==="star"?" pri":"");$("t_zone").className="pbtn"+(tool==="zone"?" pri":"");$("t_pen").className="pbtn"+(tool==="pen"?" pri":"");["sel","line","move","erase"].forEach(function(t){$("t_"+t).className="pbtn"+(tool===t?" pri":"")});
   $("ed_hint").textContent=tool==="lightstar"?"Нажмите на карту, чтобы добавить звезду и выбрать её цвет.":tool==="star"?"Нажмите на карту, где будет новый исток. Нажмите на свой исток с золотым кольцом, чтобы изменить.":tool==="zone"?"Нажмите и тяните по карте, чтобы нарисовать круг зоны.":tool==="pen"?"Зажмите и рисуйте контур зоны от руки. Когда отпустите, контур замкнётся.":tool==="sel"?"Нажмите на любой исток, зону или линию, чтобы изменить (в том числе встроенные истоки).":tool==="line"?"Зажмите и рисуйте линию от руки: маршрут, границу, путь.":tool==="move"?"Зажмите свой исток, зону или линию и перетащите.":tool==="erase"?"Нажмите на свой исток, зону или линию, чтобы удалить.":"Выберите, что добавить."}
 function inZ(z,x,y){if(z.line)return false;if(!z.pts)return Math.hypot(x-z.cx,y-z.cy)<z.r;var c=false,p=z.pts;for(var i=0,j=p.length-1;i<p.length;j=i++)if((p[i][1]>y)!=(p[j][1]>y)&&x<(p[j][0]-p[i][0])*(y-p[i][1])/(p[j][1]-p[i][1])+p[i][0])c=!c;return c}
@@ -398,7 +424,8 @@ function mig(){var v=null;try{v=localStorage.getItem("istoki-ver")}catch(e){}if(
   CST.forEach(function(s){s.x*=S;s.y*=S});UZ.forEach(function(z){z.cx*=S;z.cy*=S;z.r*=S;if(z.ty!=null)z.ty*=S;if(z.pts)z.pts.forEach(function(q){q[0]*=S;q[1]*=S})});
   PLAYERS.forEach(function(p){p.x*=S;p.y*=S;p.b=-1;p.tr=null;p.trail=[[p.x,p.y]];if(Math.hypot(p.x,p.y)>ZONES[0].r-10){p.x=-80;p.y=120;p.trail=[[-80,120]]}});
   try{localStorage.setItem("istoki-ver","3")}catch(e){}saveEd();save()}
-function clean(){cleanOv();var okc=/^\d{1,3},\d{1,3},\d{1,3}$/;CATS=CATS.filter(function(c){return c&&c.id&&okc.test(String(c.c))});CATS.forEach(function(c){c.id=String(c.id).replace(/[^\w-]/g,"");c.n=String(c.n||"");c.e=String(c.e||"")});if(!CATS.some(function(c){return c.id==="other"}))CATS.push({id:"other",n:"Другое",e:"✦",c:"160,190,255"});catUi();CST=CST.filter(function(s){return s&&isFinite(s.x)&&isFinite(s.y)});UZ=UZ.filter(function(z){return z&&isFinite(z.cx)&&isFinite(z.cy)&&isFinite(z.r)});
+function cleanStars(){var okc=/^#[0-9a-f]{6}$/i;CUSTOM_STARS=(Array.isArray(CUSTOM_STARS)?CUSTOM_STARS:[]).filter(function(s){return s&&typeof s==="object"&&isFinite(s.x)&&isFinite(s.y)}).slice(0,5000).map(function(s){return{id:s.id!=null?s.id:Date.now()+Math.random(),x:+s.x,y:+s.y,name:String(s.name||"").slice(0,80),color:okc.test(String(s.color||""))?s.color:"#dce8ff",size:Math.max(1,Math.min(12,+s.size||2))}})}
+function clean(){cleanOv();cleanStars();var okc=/^\d{1,3},\d{1,3},\d{1,3}$/;CATS=CATS.filter(function(c){return c&&c.id&&okc.test(String(c.c))});CATS.forEach(function(c){c.id=String(c.id).replace(/[^\w-]/g,"");c.n=String(c.n||"");c.e=String(c.e||"")});if(!CATS.some(function(c){return c.id==="other"}))CATS.push({id:"other",n:"Другое",e:"✦",c:"160,190,255"});catUi();CST=CST.filter(function(s){return s&&isFinite(s.x)&&isFinite(s.y)});UZ=UZ.filter(function(z){return z&&isFinite(z.cx)&&isFinite(z.cy)&&isFinite(z.r)});
   UZ.forEach(function(z){if(!okc.test(String(z.c)))z.c="255,211,107"});PLAYERS=PLAYERS.filter(function(p){return p&&isFinite(p.x)&&isFinite(p.y)});
   PLAYERS.forEach(function(p){p.h=+p.h||0;if(!Array.isArray(p.trail))p.trail=[[p.x,p.y]]});if(!PLAYERS.length){if(API)PLAYERS=[defPlayer()];else load()}}
 var CATS=[{id:"city",n:"Город",e:"🏙️",c:"255,211,107"},{id:"fort",n:"Крепость",e:"🏰",c:"255,150,90"},{id:"dungeon",n:"Подземелье",e:"💀",c:"181,124,255"},{id:"shrine",n:"Святилище",e:"⛩️",c:"120,255,180"},{id:"trade",n:"Торговый узел",e:"💰",c:"255,226,140"},{id:"danger",n:"Опасная зона",e:"☠️",c:"255,77,94"},{id:"other",n:"Другое",e:"✦",c:"160,190,255"}],CATV={};
@@ -415,7 +442,7 @@ var lastSv=0,idleN=0;
 function lbl(t,x,y){ctx.lineJoin="round";ctx.lineWidth=3.5;ctx.strokeStyle="rgba(4,6,16,.85)";ctx.strokeText(t,x,y);ctx.fillText(t,x,y)}
 function svView(){if(Date.now()-lastSv<1500)return;lastSv=Date.now();try{localStorage.setItem("istoki-view",JSON.stringify({cx:(W/2-ox)/k,cy:(H/2-oy)/k,z:k/k0}))}catch(e){}}
 var OV={stars:{},worlds:{}},CFG=null,CFG0={period:CONV.period,start:CONV.start,gather:CONV.gather,hold:CONV.hold,away:CONV.away,speed:TRAVEL.speed,evF:1},ADMIN=false,EDP=null,EVS=[],EV_ON=true,EVF=1,evRun=false,nextEv=Date.now()+9000,tmoT=0,fails=0,lockUntil=0;
-var ADMH="f58fe9f6372fcbf5745d1aea69045e3723e7c7e20953dc795d8b7e7cf777a0fc",ADMS="istoki-admin-v1:";
+var ADMH="",ADMS="istoki-admin-v1:";
 var evcv=document.getElementById("ev"),evc=evcv.getContext("2d");
 var SHA_K=(function(){var K=[],p=2;while(K.length<64){var ok=true;for(var d=2;d*d<=p;d++)if(p%d===0){ok=false;break}if(ok)K.push(Math.floor((Math.cbrt(p)%1)*4294967296)>>>0);p++}return K})();
 var SHA_H=(function(){var H=[],p=2;while(H.length<8){var ok=true;for(var d=2;d*d<=p;d++)if(p%d===0){ok=false;break}if(ok)H.push(Math.floor((Math.sqrt(p)%1)*4294967296)>>>0);p++}return H})();
@@ -429,8 +456,8 @@ function sha(b){var l=b.length,n=((l+9+63)>>6)<<6,m=new Uint8Array(n);m.set(b);m
   var out=new Uint8Array(32),ov=new DataView(out.buffer);for(i=0;i<8;i++)ov.setUint32(i*4,H[i]>>>0,false);return out}
 function hashPw(pw){var x=new TextEncoder().encode(ADMS+pw);for(var i=0;i<3000;i++)x=sha(x);return Array.prototype.map.call(x,function(v){return("0"+v.toString(16)).slice(-2)}).join("")}
 function need(){if(ADMIN)return true;toast("Нужен вход администратора");return false}
-function admUi(){$("sec_ed").hidden=!ADMIN;$("adm_out").hidden=ADMIN;$("adm_in").hidden=!ADMIN;$("pa").hidden=!ADMIN;$("pe").hidden=!ADMIN;if(ADMIN){wl();cfUi()}plInfo();edUi()}
-function setAdmin(v){ADMIN=v;try{if(!API){if(v)sessionStorage.setItem("istoki-adm",ADMH);else sessionStorage.removeItem("istoki-adm")}}catch(e){}if(!v){if(API){TOKEN=null;try{sessionStorage.removeItem("istoki-supa-token")}catch(e){}}editOn=false;tool=null;$("em").hidden=true;$("cm").hidden=true;$("xm").hidden=true}admUi()}
+function admUi(){$("sec_ed").hidden=!ADMIN;$("adm_out").hidden=ADMIN;$("adm_in").hidden=!ADMIN;$("pa").hidden=!ADMIN;$("pe").hidden=!ADMIN;$("sec_pl").hidden=!ADMIN;$("sec_wc").hidden=!ADMIN;$("sec_evt").hidden=!ADMIN;if(ADMIN){wl();cfUi()}plInfo();edUi()}
+function setAdmin(v){ADMIN=v;try{if(!API){if(v)sessionStorage.setItem("istoki-adm",ADMH);else sessionStorage.removeItem("istoki-adm")}}catch(e){}if(!v){if(API){TOKEN=null;clearSess()}editOn=false;tool=null;$("em").hidden=true;$("cm").hidden=true;$("xm").hidden=true}admUi()}
 function hexOf(c){return"#"+String(c).split(",").map(function(v){return("0"+(+v).toString(16)).slice(-2)}).join("")}
 function rnd(a,b){return a+Math.random()*(b-a)}
 function saveCfg(){if(API){schedulePub();return}try{if(CFG)localStorage.setItem("istoki-cfg",JSON.stringify(CFG));else localStorage.removeItem("istoki-cfg")}catch(e){}}
@@ -443,9 +470,12 @@ function cleanOv(){var okc=/^\d{1,3},\d{1,3},\d{1,3}$/,o={stars:{},worlds:{}};if
   Object.keys(S).forEach(function(k){var v=S[k];if(v&&typeof v==="object")o.stars[k]={n:String(v.n||"").slice(0,120),d:v.d==null?null:String(v.d).slice(0,2000)}});
   Object.keys(Wd).forEach(function(k){var v=Wd[k];if(v&&typeof v==="object"&&+k>=0&&+k<BUBBLES.length)o.worlds[k]={n:String(v.n||"").slice(0,200),c:okc.test(String(v.c))?v.c:null}})}OV=o}
 function applyOv(skipWl){NAMED.forEach(function(n){if(n[4])return;var o=OV.stars[n.orig];n[0]=o&&o.n?o.n:n.orig;n[3]=o&&o.d!=null?o.d:n.desc0});
-  BUBBLES.forEach(function(b,i){var o=OV.worlds[i];b.n=o&&o.n?o.n:b.n0;b.c=o&&o.c?o.c:b.c0});worldBtns();syncNamed();if(!skipWl&&ADMIN)wl()}
-function wl(){var L=$("wl");if(!L)return;L.innerHTML="";BUBBLES.forEach(function(b,i){var d=document.createElement("div");d.className="wrow";var c=document.createElement("input");c.type="color";c.value=hexOf(b.c);var n=document.createElement("input");n.value=b.n;n.setAttribute("aria-label","Название мира");
-  function sv(){if(!need())return;OV.worlds[i]={n:n.value.trim()||b.n0,c:rgbOf(c.value)};saveEd();applyOv(true);draw()}c.onchange=sv;n.onchange=sv;d.appendChild(c);d.appendChild(n);L.appendChild(d)})}
+  BUBBLES.forEach(function(b,i){var o=OV.worlds[i];b.n=o&&o.n?o.n:b.n0;b.c=o&&o.c?o.c:b.c0});worldBtns();evwUi();syncNamed();if(!skipWl&&ADMIN)wl()}
+function evwCb(d,w){var cb=document.createElement("input");cb.type="checkbox";cb.checked=evWOn(w);cb.title="Случайные ивенты внутри этого мира";cb.setAttribute("aria-label","Ивенты внутри мира");
+  cb.onchange=function(){if(!need()){cb.checked=!cb.checked;return}CFG=Object.assign({},CFG||{});CFG.evW=Object.assign({},CFG.evW||{});CFG.evW[w<0?"c":w]=cb.checked;saveCfg()};d.appendChild(cb)}
+function evwRow(L,w,name){var d=document.createElement("div");d.className="wrow";var sp=document.createElement("span");sp.textContent=name;sp.style.flex="1";d.appendChild(sp);evwCb(d,w);L.appendChild(d)}
+function wl(){var L=$("wl");if(!L)return;L.innerHTML="";evwRow(L,-1,"Центральный мир");BUBBLES.forEach(function(b,i){var d=document.createElement("div");d.className="wrow";var c=document.createElement("input");c.type="color";c.value=hexOf(b.c);var n=document.createElement("input");n.value=b.n;n.setAttribute("aria-label","Название мира");
+  function sv(){if(!need())return;OV.worlds[i]={n:n.value.trim()||b.n0,c:rgbOf(c.value)};saveEd();applyOv(true);draw()}c.onchange=sv;n.onchange=sv;d.appendChild(c);d.appendChild(n);evwCb(d,i);L.appendChild(d)})}
 function scaleZone(z,f){z.r*=f;if(z.pts){z.pts.forEach(function(q){q[0]=z.cx+(q[0]-z.cx)*f;q[1]=z.cy+(q[1]-z.cy)*f});if(z.ty!=null)z.ty=z.cy+(z.ty-z.cy)*f}}
 function evMsg(m){var t=$("tick");t.textContent=m;t.hidden=false;clearTimeout(tmoT);tmoT=setTimeout(function(){t.hidden=true},5500)}
 function evSpawn(type){var e={type:type,t0:performance.now()},bw=HB.x1-HB.x0,bh=HB.y1-HB.y0,cx=(HB.x0+HB.x1)/2,cy=(HB.y0+HB.y1)/2,i;
@@ -464,7 +494,7 @@ function evOne(c,e,u,now){var t=e.type,fade=Math.sin(Math.PI*Math.min(1,u));
   else if(t==="nova"){var bx=e.b>=0?BUBBLES[e.b].cx+e.dx:e.dx,by=e.b>=0?BUBBLES[e.b].cy+e.dy:e.dy,nx=bx*k+ox,ny=by*k+oy,Rp=Math.max(30,Math.min(260,e.R*k)),a1=Math.pow(1-u,2),gn=c.createRadialGradient(nx,ny,0,nx,ny,Rp*(.2+.8*u));gn.addColorStop(0,"rgba("+e.c+","+(.9*a1)+")");gn.addColorStop(1,"rgba("+e.c+",0)");c.fillStyle=gn;c.beginPath();c.arc(nx,ny,Rp*(.2+.8*u),0,6.2832);c.fill();c.strokeStyle="rgba(255,255,255,"+(.7*(1-u))+")";c.lineWidth=2;c.beginPath();c.arc(nx,ny,Rp*u,0,6.2832);c.stroke()}
   else if(t==="wave"){[[1,"138,164,255"],[.88,"199,155,255"]].forEach(function(p){var r=ZONES[0].r*1.15*Math.max(0,u*p[0]);c.strokeStyle="rgba("+p[1]+","+(.55*(1-u))+")";c.lineWidth=Math.max(2,Math.min(14,r*k*.02));c.beginPath();c.arc(ox,oy,r*k,0,6.2832);c.stroke()})}
   else if(t==="aurora"){var b=BUBBLES[e.i],ax=b.cx*k+ox,ay=b.cy*k+oy,rr=b.r*k;if(ax+rr<0||ax-rr>W||ay+rr<0||ay-rr>H)return;for(var j=0;j<3;j++){c.strokeStyle="rgba("+b.c+","+(.32*fade)+")";c.lineWidth=Math.max(3,Math.min(16,rr*.05))*(1-j*.25);c.beginPath();for(var an3=0;an3<=6.3;an3+=.05){var rj=rr*(1.03+.025*j+.02*Math.sin(an3*5+now/600+j*2)),qx=ax+Math.cos(an3)*rj,qy=ay+Math.sin(an3)*rj;an3===0?c.moveTo(qx,qy):c.lineTo(qx,qy)}c.stroke()}}
-  else if(t==="leviathan"){lvDraw(c,e,u,now)}else{var al2=.6*(1-u);BUBBLES.forEach(function(b){c.strokeStyle="rgba("+b.c+","+al2+")";c.lineWidth=3;c.beginPath();c.arc(b.cx*k+ox,b.cy*k+oy,b.r*k*(1+.12*u),0,6.2832);c.stroke()});c.strokeStyle="rgba(138,164,255,"+al2+")";c.lineWidth=3;c.beginPath();c.arc(ox,oy,ZONES[0].r*k*(1+.12*u),0,6.2832);c.stroke()}}
+  else if(t==="leviathan"){lvDraw(c,e,u,now)}else if(t==="in"){evwDraw(c,e,u,now)}else{var al2=.6*(1-u);BUBBLES.forEach(function(b){c.strokeStyle="rgba("+b.c+","+al2+")";c.lineWidth=3;c.beginPath();c.arc(b.cx*k+ox,b.cy*k+oy,b.r*k*(1+.12*u),0,6.2832);c.stroke()});c.strokeStyle="rgba(138,164,255,"+al2+")";c.lineWidth=3;c.beginPath();c.arc(ox,oy,ZONES[0].r*k*(1+.12*u),0,6.2832);c.stroke()}}
 function evDraw(now){var c=evc;c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);c.globalCompositeOperation="lighter";EVS=EVS.filter(function(e){var u=(now-e.t0)/e.dur;if(u>=1)return false;evOne(c,e,Math.max(0,u),now);return true});c.globalCompositeOperation="source-over"}
 var lvH=-1,lvFb=0,LV={L:5200,W:230};
 function lvObst(){var o=[{x:0,y:0,r:ZONES[0].r}];BUBBLES.forEach(function(b){o.push({x:b.cx,y:b.cy,r:b.r})});return o}
@@ -519,7 +549,7 @@ function applyShared(d){if(!d||typeof d!=="object")return;var id=cur&&cur.id;
   CUSTOM_STARS=Array.isArray(d.CUSTOM_STARS)?d.CUSTOM_STARS:[];CST=Array.isArray(d.CST)?d.CST:[];UZ=Array.isArray(d.UZ)?d.UZ:[];if(Array.isArray(d.CATS)&&d.CATS.length)CATS=d.CATS;
   OV=d.OV&&typeof d.OV==="object"?d.OV:{stars:{},worlds:{}};CFG=d.CFG&&typeof d.CFG==="object"?d.CFG:null;ZONE_HIDDEN={blood:!!(d.ZONE_HIDDEN&&d.ZONE_HIDDEN.blood),dragon:!!(d.ZONE_HIDDEN&&d.ZONE_HIDDEN.dragon)};updateStarCleaner();
   clean();cur=PLAYERS.filter(function(p){return p.id===id})[0]||PLAYERS[0];plSel=false;applyCfg();applyOv();plInfo();if(ADMIN)cfUi();startTrav();draw()}
-function updateStarCleaner(){var a=$("clear_blood"),b=$("clear_dragon");if(a)a.textContent=ZONE_HIDDEN.blood?"Вернуть Кровавое пространство":"Убрать Кровавое пространство";if(b)b.textContent=ZONE_HIDDEN.dragon?"Вернуть Драконье гнездо":"Убрать Драконье гнездо"}
+function updateStarCleaner(){var a=$("clear_blood"),b=$("clear_dragon");document.querySelectorAll("[data-t]").forEach(function(bt){bt.hidden=+bt.dataset.t===0?ZONE_HIDDEN.blood:ZONE_HIDDEN.dragon});if(a)a.textContent=ZONE_HIDDEN.blood?"Вернуть Кровавое пространство":"Убрать Кровавое пространство";if(b)b.textContent=ZONE_HIDDEN.dragon?"Вернуть Драконье гнездо":"Убрать Драконье гнездо"}
 $("clear_blood").onclick=function(){if(!ADMIN)return;ZONE_HIDDEN.blood=!ZONE_HIDDEN.blood;updateStarCleaner();schedulePub();draw()};
 $("clear_dragon").onclick=function(){if(!ADMIN)return;ZONE_HIDDEN.dragon=!ZONE_HIDDEN.dragon;updateStarCleaner();schedulePub();draw()};
 updateStarCleaner();
@@ -531,18 +561,55 @@ if(j.revision>REV&&!pubBusy&&!pubDirty){REV=j.revision;if(j.data)applyShared(j.d
 .catch(function(e){console.error("Supabase read:",e);if(first){pubSt("Не удалось прочитать карту");toast("Ошибка Supabase: проверьте SQL и таблицу map_state")}})}
 function schedulePub(){if(!API||!ADMIN)return;pubDirty=true;clearTimeout(pubT);pubSt("Сохранение…");pubT=setTimeout(doPub,800)}
 function doPub(){if(!API||!ADMIN||!TOKEN||pubBusy||!pubDirty)return;pubBusy=true;pubDirty=false;
-fetch(SUPA_URL+"/rest/v1/rpc/save_map_state",{method:"POST",headers:supaHeaders(true),body:JSON.stringify({new_data:sharedState()})})
-.then(function(r){if(r.status===401||r.status===403){setAdmin(false);throw new Error("Нет прав администратора")}if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})
-.then(function(rev){REV=Math.max(REV,+rev||0);pubBusy=false;pubSt("Сохранено в Supabase ✓");if(pubDirty)doPub()})
-.catch(function(e){console.error("Supabase save:",e);pubBusy=false;pubDirty=true;pubSt("Ошибка сохранения — повтор через 5 сек");setTimeout(doPub,5000)})}
+  ensureToken().then(function(){return fetch(SUPA_URL+"/rest/v1/rpc/save_map_state",{method:"POST",headers:supaHeaders(true),body:JSON.stringify({new_data:sharedState()})})})
+  .then(function(r){if(r.status===401||r.status===403){var er=new Error("auth");er.auth=true;throw er}if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})
+  .then(function(rev){REV=Math.max(REV,+rev||0);pubBusy=false;pubFails=0;pubSt("Сохранено в Supabase ✓");if(pubDirty)doPub()})
+  .catch(function(e){pubBusy=false;pubDirty=true;
+    if(e&&(e.auth||e.message==="refresh"||e.message==="no refresh")){setAdmin(false);toast("Сессия администратора истекла. Войдите снова, изменения сохранятся");pubSt("Нужен повторный вход");return}
+    console.error("Supabase save:",e);pubFails++;if(pubFails>=5){pubFails=0;pubSt("Не удалось сохранить. Проверьте связь и сделайте любое изменение, чтобы повторить");return}
+    pubSt("Ошибка сохранения, повтор через 5 сек");setTimeout(doPub,5000)})}
 function serverLogin(pw){$("lm_msg").textContent="Проверяю…";
 fetch(SUPA_URL+"/auth/v1/token?grant_type=password",{method:"POST",headers:{"apikey":SUPA_KEY,"Content-Type":"application/json"},body:JSON.stringify({email:$("lm_email").value.trim(),password:pw})})
 .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.msg||j.error_description||j.message||"Ошибка входа");return j})})
 .then(function(j){TOKEN=j.access_token;return fetch(SUPA_URL+"/rest/v1/map_admins?user_id=eq."+encodeURIComponent(j.user.id)+"&select=user_id",{headers:supaHeaders(true)})
 .then(function(r){if(!r.ok)throw new Error("Не удалось проверить права");return r.json()}).then(function(rows){if(!rows.length)throw new Error("Эта учётная запись не является администратором");return j})})
-.then(function(j){try{sessionStorage.setItem("istoki-supa-token",TOKEN)}catch(e){}$("lm").hidden=true;ADMIN=true;admUi();toast("Вы вошли как администратор");pubSt("Подключено к Supabase");pull()})
+.then(function(j){saveSess(j);$("lm").hidden=true;ADMIN=true;admUi();if(pubDirty)schedulePub();toast("Вы вошли как администратор");pubSt("Подключено к Supabase");pull()})
 .catch(function(e){TOKEN=null;$("lm_msg").textContent=e.message;console.error("Supabase login:",e)});
 }
+var pubFails=0;
+function jwtPayload(t){try{return JSON.parse(atob(String(t).split(".")[1].replace(/-/g,"+").replace(/_/g,"/")))}catch(e){return null}}
+function saveSess(j){try{sessionStorage.setItem("istoki-supa-token",j.access_token);if(j.refresh_token)sessionStorage.setItem("istoki-supa-refresh",j.refresh_token)}catch(e){}}
+function clearSess(){try{sessionStorage.removeItem("istoki-supa-token");sessionStorage.removeItem("istoki-supa-refresh")}catch(e){}}
+function refreshSession(){var rt=null;try{rt=sessionStorage.getItem("istoki-supa-refresh")}catch(e){}if(!rt)return Promise.reject(new Error("no refresh"));
+  return fetch(SUPA_URL+"/auth/v1/token?grant_type=refresh_token",{method:"POST",headers:{apikey:SUPA_KEY,"Content-Type":"application/json"},body:JSON.stringify({refresh_token:rt})}).then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error("refresh");TOKEN=j.access_token;saveSess(j);return j})})}
+function ensureToken(){var p=TOKEN&&jwtPayload(TOKEN);if(p&&p.exp*1000>Date.now()+60000)return Promise.resolve();return refreshSession()}
+function checkAdmin(uid){return fetch(SUPA_URL+"/rest/v1/map_admins?user_id=eq."+encodeURIComponent(uid)+"&select=user_id",{headers:supaHeaders(true)}).then(function(r){if(!r.ok)throw new Error("rights");return r.json()}).then(function(rows){return rows.length>0})}
+function restoreSession(){var t=null;try{t=sessionStorage.getItem("istoki-supa-token")}catch(e){}if(!t)return;TOKEN=t;
+  ensureToken().then(function(){var p=jwtPayload(TOKEN);return p&&p.sub?checkAdmin(p.sub):false}).then(function(okA){if(okA){ADMIN=true;admUi();pubSt("Подключено к Supabase");toast("Сессия администратора восстановлена")}else{TOKEN=null;clearSess()}}).catch(function(){TOKEN=null;clearSess()})}
+var EVW_TYPES={storm:{m:"⚡ Гроза",d:7000},vortex:{m:"🌀 Вихрь",d:8000},fireflies:{m:"✨ Светляки",d:10000},mist:{m:"🌫 Туман",d:12000},eclipse:{m:"🌑 Затмение",d:9000},ripples:{m:"🔔 Эхо истока",d:8000},rockfall:{m:"☄ Каменный дождь",d:7000},rift:{m:"🕳 Разлом",d:7000}},nextEvW=Date.now()+14000;
+function wGeo(w){if(w<0)return{x:0,y:0,r:ZONES[0].r,c:"138,164,255",n:"Центральный мир"};var b=BUBBLES[w];return{x:b.cx,y:b.cy,r:b.r,c:b.c,n:b.n}}
+function evWOn(w){var m=CFG&&CFG.evW;return !(m&&m[w<0?"c":w]===false)}
+function evwSpawn(type,w){if(!EVW_TYPES[type]||w<-1||w>=BUBBLES.length)return;var g=wGeo(w),e={type:"in",k:type,w:w,t0:performance.now(),dur:EVW_TYPES[type].d,seed:Math.floor(Math.random()*1e9)};
+  EVS.push(e);evMsg(EVW_TYPES[type].m+": "+g.n);if(!evRun){evRun=true;requestAnimationFrame(evFrame)}}
+function evwUi(){var s=$("evw_t");if(!s)return;var v=s.value||"rand";s.innerHTML="";[["rand","Случайный мир"],["all","Во всех мирах"],["c","Центральный мир"]].concat(BUBBLES.map(function(b,i){return[String(i),b.n]})).forEach(function(o){var op=document.createElement("option");op.value=o[0];op.textContent=o[1];s.appendChild(op)});s.value=v}
+function evwDraw(c,e,u,now){var g=wGeo(e.w),cx=g.x*k+ox,cy=g.y*k+oy,r=g.r*k;if(cx+r<0||cx-r>W||cy+r<0||cy-r>H||r<2)return;
+  var fade=Math.sin(Math.PI*Math.min(1,u)),Rn=rng(e.seed|0),i,j,col=g.c;
+  c.save();c.beginPath();c.arc(cx,cy,r,0,6.2832);c.clip();c.globalCompositeOperation="lighter";
+  if(e.k==="storm"){var fl=(Math.sin(now/90+e.seed)>.15?1:.3)*fade,gs=c.createRadialGradient(cx,cy,r*.1,cx,cy,r);gs.addColorStop(0,"rgba(120,150,255,"+(.08*fade)+")");gs.addColorStop(1,"rgba(60,80,200,"+(.22*fade)+")");c.fillStyle=gs;c.fillRect(cx-r,cy-r,2*r,2*r);
+    for(i=0;i<6;i++){var bx=cx+(Rn()*1.6-.8)*r,ph=(now/700+Rn()*5+i)%3,pts=[],x=bx,y=cy-r*.95;pts.push([x,y]);for(j=0;j<9;j++){x+=(Rn()-.5)*r*.18;y+=r*.21;pts.push([x,y])}
+      if(ph>1)continue;c.strokeStyle="rgba(225,238,255,"+((1-ph)*fl)+")";c.lineWidth=Math.max(1,r*.007);c.beginPath();pts.forEach(function(p,q){q?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1])});c.stroke()}}
+  else if(e.k==="vortex"){var vx=cx+(Rn()-.5)*r*.5,vy=cy+(Rn()-.5)*r*.5;for(i=0;i<4;i++){c.strokeStyle="rgba("+col+","+(.5*fade)+")";c.lineWidth=Math.max(1.5,r*.012);c.beginPath();for(j=0;j<=60;j++){var t=j/60,an=i*1.5708+t*7+now/600,rr=t*r*.9;j?c.lineTo(vx+Math.cos(an)*rr,vy+Math.sin(an)*rr):c.moveTo(vx,vy)}c.stroke()}
+    var gv=c.createRadialGradient(vx,vy,0,vx,vy,r*.35);gv.addColorStop(0,"rgba(255,255,255,"+(.5*fade)+")");gv.addColorStop(1,"rgba("+col+",0)");c.fillStyle=gv;c.fillRect(vx-r*.4,vy-r*.4,r*.8,r*.8)}
+  else if(e.k==="fireflies"){for(i=0;i<70;i++){var fx=Rn()*2-1,fy=Rn()*2-1,sp=.3+Rn()*.7,yy=(((fy+1-u*sp*2)%2)+2)%2-1,px=cx+(fx+.04*Math.sin(now/900+i))*r,py=cy+yy*r,tw=.4+.6*Math.sin(now/300+i);
+      c.fillStyle="rgba(255,240,150,"+(.85*fade*tw)+")";c.beginPath();c.arc(px,py,Math.max(1.3,r*.008),0,6.2832);c.fill();c.fillStyle="rgba(255,220,120,"+(.18*fade*tw)+")";c.beginPath();c.arc(px,py,Math.max(3,r*.022),0,6.2832);c.fill()}}
+  else if(e.k==="mist"){for(i=0;i<6;i++){var mx=cx+(((Rn()*2-1)+u*(.3+Rn()*.4)+1)%2-1)*r,my=cy+(Rn()*1.6-.8)*r,mr=r*(.3+Rn()*.25),gm=c.createRadialGradient(mx,my,0,mx,my,mr);gm.addColorStop(0,"rgba(210,225,255,"+(.16*fade)+")");gm.addColorStop(1,"rgba(210,225,255,0)");c.fillStyle=gm;c.beginPath();c.arc(mx,my,mr,0,6.2832);c.fill()}}
+  else if(e.k==="eclipse"){c.globalCompositeOperation="source-over";var ex=cx+(-1.1+2.2*u)*r*.6,ey=cy+Math.sin(u*3)*r*.15,er=r*.32;c.fillStyle="rgba(2,3,10,"+(.85*Math.min(1,fade*2))+")";c.beginPath();c.arc(ex,ey,er,0,6.2832);c.fill();
+    c.globalCompositeOperation="lighter";c.strokeStyle="rgba(255,205,120,"+(.8*fade)+")";c.lineWidth=Math.max(2,r*.02);c.beginPath();c.arc(ex,ey,er*1.04,0,6.2832);c.stroke();var gc=c.createRadialGradient(ex,ey,er,ex,ey,er*1.8);gc.addColorStop(0,"rgba(255,190,100,"+(.35*fade)+")");gc.addColorStop(1,"rgba(255,190,100,0)");c.fillStyle=gc;c.beginPath();c.arc(ex,ey,er*1.8,0,6.2832);c.fill()}
+  else if(e.k==="ripples"){for(j=0;j<4;j++){var q=((u*1.4+j*.25)%1.1)/1.1;c.strokeStyle="rgba("+col+","+(.7*(1-q)*fade)+")";c.lineWidth=Math.max(2,r*.014);c.beginPath();c.arc(cx,cy,q*r*1.05,0,6.2832);c.stroke()}}
+  else if(e.k==="rockfall"){for(i=0;i<26;i++){var q2=((u*1.8+Rn())%1),x0=cx+(Rn()*2-.5)*r,y0=cy-r*1.1,dx=r*.5,dy=r*1.25,hx=x0+dx*q2,hy=y0+dy*q2,tl=r*.12;c.strokeStyle="rgba(255,170,90,"+(.9*fade*(1-q2*.5))+")";c.lineWidth=Math.max(1.2,r*.007);c.beginPath();c.moveTo(hx,hy);c.lineTo(hx-dx/dy*tl*.5,hy-tl);c.stroke();c.fillStyle="rgba(255,230,180,"+fade+")";c.beginPath();c.arc(hx,hy,Math.max(1.2,r*.006),0,6.2832);c.fill()}}
+  else if(e.k==="rift"){var open=Math.sin(Math.PI*Math.min(1,u)),ang0=Rn()*6.283,pts2=[];for(j=-8;j<=8;j++){var tt=j/8;pts2.push([cx+Math.cos(ang0)*tt*r*.8+(Rn()-.5)*r*.08,cy+Math.sin(ang0)*tt*r*.8+(Rn()-.5)*r*.08])}
+    [[r*.06,.18],[r*.025,.5],[Math.max(1,r*.008),.95]].forEach(function(p){c.strokeStyle="rgba("+(p[1]>.9?"255,255,255":col)+","+(p[1]*open)+")";c.lineWidth=Math.max(1,p[0]*open+1);c.beginPath();pts2.forEach(function(q,w2){w2?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1])});c.stroke()})}
+  c.restore()}
 function evFrame(now){if(!EVS.length){evc.clearRect(0,0,W,H);evRun=false;return}evDraw(now);requestAnimationFrame(evFrame)}
 var mm=document.getElementById("mm"),mg=mm.getContext("2d"),MW=220,MH2=150;
 function mmT(){var w=HB.x1-HB.x0,h=HB.y1-HB.y0,sc=Math.min(MW/w,MH2/h);return{s:sc,ox:(MW-w*sc)/2-HB.x0*sc,oy:(MH2-h*sc)/2-HB.y0*sc}}
@@ -552,7 +619,7 @@ function drawMini(){var d=window.devicePixelRatio||1;if(mm.width!==Math.round(MW
   BUBBLES.forEach(function(b){g.beginPath();g.arc(X(b.cx),Y(b.cy),b.r*sc,0,6.2832);g.fillStyle="rgba("+b.c+",.4)";g.fill()});
   TERR.forEach(function(t,i){if(i===0&&ZONE_HIDDEN.blood||i===1&&ZONE_HIDDEN.dragon)return;g.beginPath();g.arc(X(t.cx),Y(t.cy),t.r*sc,0,6.2832);g.fillStyle="rgba("+t.c+",.6)";g.fill()});
   UZ.forEach(function(z){g.beginPath();if(z.pts)z.pts.forEach(function(q,i){i?g.lineTo(X(q[0]),Y(q[1])):g.moveTo(X(q[0]),Y(q[1]))});else g.arc(X(z.cx),Y(z.cy),z.r*sc,0,6.2832);g.fillStyle="rgba("+z.c+",.55)";g.fill()});
-  PLAYERS.forEach(function(p){g.beginPath();g.arc(X(p.x),Y(p.y),2.5,0,6.2832);g.fillStyle="hsl("+p.h+",100%,65%)";g.fill()});
+  (ADMIN?PLAYERS:[]).forEach(function(p){g.beginPath();g.arc(X(p.x),Y(p.y),2.5,0,6.2832);g.fillStyle="hsl("+p.h+",100%,65%)";g.fill()});
   g.strokeStyle="#fff";g.lineWidth=1.2;g.strokeRect(X(-ox/k),Y(-oy/k),W/k*sc,H/k*sc)}
 function miniGo(e){var r=mm.getBoundingClientRect(),T=mmT(),wx=((e.clientX-r.left)*MW/r.width-T.ox)/T.s,wy=((e.clientY-r.top)*MH2/r.height-T.oy)/T.s;ox=W/2-wx*k;oy=H/2-wy*k;draw()}
 var mdn=false;mm.addEventListener("pointerdown",function(e){mdn=true;mm.setPointerCapture(e.pointerId);miniGo(e)});mm.addEventListener("pointermove",function(e){if(mdn)miniGo(e)});mm.addEventListener("pointerup",function(){mdn=false});
@@ -567,10 +634,10 @@ function hitUser(mx,my){for(var j=CUSTOM_STARS.length-1;j>=0;j--)if(Math.hypot(C
   for(i=UZ.length-1;i>=0;i--){var z=UZ[i];if(z.line?nearLine(z.pts,wx,wy,10/k):inZ(z,wx,wy))return{kind:"zone",o:z}}return null}
 function items(){var a=[];NAMED.forEach(function(n){a.push({t:"Исток",n:n[0],f:function(){fit(n[1],n[2],150)}})});
   ZONES.forEach(function(z){a.push({t:"Область",n:z.n,f:function(){fit(0,0,z.r)}})});
-  TERR.forEach(function(z){a.push({t:"Территория",n:z.n,f:function(){fit(z.cx,z.cy,z.r*1.3)}})});
+  TERR.forEach(function(z,i){if(i===0&&ZONE_HIDDEN.blood||i===1&&ZONE_HIDDEN.dragon)return;a.push({t:"Территория",n:z.n,f:function(){fit(z.cx,z.cy,z.r*1.3)}})});
   BUBBLES.forEach(function(b){a.push({t:"Потусторонний мир",n:b.n,f:function(){fit(b.cx,b.cy,b.r*1.1)}})});
   UZ.forEach(function(z){a.push({t:"Зона",n:z.n,f:function(){fit(z.cx,z.cy,z.r*1.2)}})});
-  PLAYERS.forEach(function(p){a.push({t:"Игрок",n:p.name,f:function(){cur=p;plSel=false;plInfo();fit(p.x,p.y,200)}})});return a}
+  if(ADMIN)PLAYERS.forEach(function(p){a.push({t:"Игрок",n:p.name,f:function(){cur=p;plSel=false;plInfo();fit(p.x,p.y,200)}})});return a}
 $("q").addEventListener("input",function(){var v=this.value.trim().toLowerCase(),L=$("qr");L.innerHTML="";if(!v)return;items().filter(function(i){return i.n.toLowerCase().indexOf(v)>-1}).slice(0,8).forEach(function(i){var b=document.createElement("button");b.className="pli";b.innerHTML=esc(i.n)+' <small style="color:var(--mute)">· '+i.t+'</small>';b.onclick=i.f;L.appendChild(b)})});
 var P={},moved=0,pd=0;
 cv.addEventListener("wheel",function(e){e.preventDefault();var r=cv.getBoundingClientRect();zoomAt(e.deltaY<0?1.25:0.8,e.clientX-r.left,e.clientY-r.top)},{passive:false});
@@ -582,7 +649,7 @@ window.addEventListener("pointermove",function(e){var p=P[e.pointerId];if(!p)ret
 window.addEventListener("pointerup",function(e){if(!P[e.pointerId])return;delete P[e.pointerId];cv.classList.remove("drag");if(mv){mv=null;saveEd();syncNamed();draw();return}if(pen){var pp=pen;pen=null;penDone(pp);draw();return}if(zd){var zz0=zd;zd=null;if(zz0.r*k>12)openZone(zz0);draw();return}
   if(moved<5&&e.target===cv){var r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top,best=null,bd=18;
     if(editOn&&tool==="sel"){var hh=hitUser(mx,my);if(hh){hh.kind==="lightstar"?openLightStar(hh.o):hh.kind==="star"?openStar(hh.o):openZone(hh.o);return}var bn=null,bdd=14;NAMED.forEach(function(n){if(n[4])return;var d=Math.hypot(n[1]*k+ox-mx,n[2]*k+oy-my);if(d<bdd){bdd=d;bn=n}});if(bn)openBuiltin(bn);return}if(editOn&&tool==="move")return;if(editOn&&tool==="erase"){var h=hitUser(mx,my);if(h){snap();var a=h.kind==="lightstar"?CUSTOM_STARS:h.kind==="star"?CST:UZ;a.splice(a.indexOf(h.o),1);saveEd();syncNamed();draw()}return}if(editOn){var hs=null;CST.forEach(function(s){if(Math.hypot(s.x*k+ox-mx,s.y*k+oy-my)<14)hs=s});if(hs){openStar(hs);return}if(tool==="star"){openStar({x:(mx-ox)/k,y:(my-oy)/k});return}if(tool==="lightstar"){openLightStar({x:(mx-ox)/k,y:(my-oy)/k,color:"#dce8ff",size:2});return}}
-    if(1){var hp=null;PLAYERS.forEach(function(p){if(Math.hypot(p.x*k+ox-mx,p.y*k+oy-my)<16)hp=p});
+    if(1){var hp=null;(ADMIN?PLAYERS:[]).forEach(function(p){if(Math.hypot(p.x*k+ox-mx,p.y*k+oy-my)<16)hp=p});
       if(hp){if(!ADMIN){cur=hp;plSel=false}else if(hp===cur)plSel=!plSel;else{cur=hp;plSel=true}plInfo();draw();return}
       if(plSel){var tg=null,nd=18;NAMED.forEach(function(n){var d=Math.hypot(n[1]*k+ox-mx,n[2]*k+oy-my);if(d<nd){nd=d;tg=[n[1],n[2],n.b>=0?n.b:-1]}});if(!tg)tg=nearStar(mx,my,28);if(tg){moveTo(tg[0],tg[1],tg[2])}return}}
     NAMED.forEach(function(n){var d=Math.hypot(n[1]*k+ox-mx,n[2]*k+oy-my);if(d<bd){bd=d;best=n}});
@@ -616,10 +683,10 @@ $("em_cancel").onclick=function(){$("em").hidden=true};
 $("em").addEventListener("click",function(e){if(e.target===this)this.hidden=true});
 $("em_del").onclick=function(){if(this.dataset.c!=="1"){this.dataset.c="1";this.textContent="Нажмите ещё раз";return}
   snap();var a=ED.kind==="star"?CST:UZ;a.splice(a.indexOf(ED.o),1);saveEd();$("em").hidden=true;syncNamed();draw()};
-$("ed_xp").onclick=function(){$("xm_t").value=JSON.stringify({CST:CST,UZ:UZ,CUSTOM_STARS:CUSTOM_STARS,CATS:CATS,OV:OV,CFG:CFG,PLAYERS:PLAYERS});$("xm_msg").textContent="";$("xm").hidden=false};
+$("ed_xp").onclick=function(){$("xm_t").value=JSON.stringify({CST:CST,UZ:UZ,CUSTOM_STARS:CUSTOM_STARS,ZONE_HIDDEN:ZONE_HIDDEN,CATS:CATS,OV:OV,CFG:CFG,PLAYERS:PLAYERS});$("xm_msg").textContent="";$("xm").hidden=false};
 $("xm_close").onclick=function(){$("xm").hidden=true};
 $("xm_copy").onclick=function(){var t=$("xm_t");t.select();try{document.execCommand("copy");$("xm_msg").textContent="Скопировано."}catch(e){$("xm_msg").textContent="Выделите текст и скопируйте вручную."}};
-$("xm_apply").onclick=function(){try{var s=JSON.parse($("xm_t").value);CST=s.CST||[];UZ=s.UZ||[];CUSTOM_STARS=s.CUSTOM_STARS||[];if(s.CATS&&s.CATS.length)CATS=s.CATS;if(s.OV)OV=s.OV;if(s.CFG){CFG=s.CFG;saveCfg();applyCfg();cfUi()}if(s.PLAYERS&&s.PLAYERS.length){PLAYERS=s.PLAYERS;cur=PLAYERS[0]}clean();cur=PLAYERS[0];save();saveEd();applyOv();plInfo();draw();$("xm").hidden=true}catch(e){$("xm_msg").textContent="Не удалось прочитать данные."}};
+$("xm_apply").onclick=function(){try{var s=JSON.parse($("xm_t").value);CST=s.CST||[];UZ=s.UZ||[];CUSTOM_STARS=s.CUSTOM_STARS||[];if(s.ZONE_HIDDEN){ZONE_HIDDEN={blood:!!s.ZONE_HIDDEN.blood,dragon:!!s.ZONE_HIDDEN.dragon};updateStarCleaner()}if(s.CATS&&s.CATS.length)CATS=s.CATS;if(s.OV)OV=s.OV;if(s.CFG){CFG=s.CFG;saveCfg();applyCfg();cfUi()}if(s.PLAYERS&&s.PLAYERS.length){PLAYERS=s.PLAYERS;cur=PLAYERS[0]}clean();cur=PLAYERS[0];save();saveEd();applyOv();plInfo();draw();$("xm").hidden=true}catch(e){$("xm_msg").textContent="Не удалось прочитать данные."}};
 $("ev_sp").onclick=function(){sk.v0=vt();sk.t0=Date.now();sk.spd=sk.spd===1?CONV.period*1000/60000:1;this.textContent=sk.spd===1?"⏩ Цикл за минуту":"⏸ Обычная скорость";draw()};
 $("ev_go").onclick=function(){var T=CONV.period*1000,v=vt();sk.v0=v-(((v-CONV.start)%T+T)%T)+T;sk.t0=Date.now();draw()};
 $("ev_rs").onclick=function(){sk.v0=Date.now();sk.t0=Date.now();sk.spd=1;$("ev_sp").textContent="⏩ Цикл за минуту";draw()};
@@ -632,13 +699,13 @@ $("cm_close").onclick=function(){$("cm").hidden=true};
 $("cm").addEventListener("click",function(e){if(e.target===this)this.hidden=true});
 $("cm_add").onclick=function(){var n=$("cm_n").value.trim();if(!n)return;var oi=CATS.findIndex(function(x){return x.id==="other"});CATS.splice(oi<0?CATS.length:oi,0,{id:"c"+Date.now(),n:n,e:($("cm_e").value.trim()||"✦").slice(0,4),c:rgbOf($("cm_c").value)});$("cm_n").value="";$("cm_e").value="";saveEd();catUi();draw()};
 cv.addEventListener("pointermove",function(e){var r=cv.getBoundingClientRect();cc=[Math.round((e.clientX-r.left-ox)/k),Math.round((e.clientY-r.top-oy)/k)]});
-document.addEventListener("keydown",function(e){if(e.key==="Escape")["modal","em","xm","cm","hm","lm"].forEach(function(i){$(i).hidden=true})});
+document.addEventListener("keydown",function(e){if(e.key==="Escape")["modal","em","xm","cm","hm","lm","sm"].forEach(function(i){$(i).hidden=true})});
 setInterval(function(){if(!document.hidden&&!Object.keys(P).length&&(genI<GEN.length||sk.spd>1||++idleN%4===0))draw()},200);
 loadEd();load();mig();syncNamed();catUi();startTrav();genStep();plInfo();edUi();document.getElementById("pf").onclick=function(){if(cur)fit(cur.x,cur.y,200)};
 var rg=document.querySelector(".reg");rg.insertAdjacentHTML("beforeend",'<h3 style="margin-top:12px">Потусторонние миры</h3><div id="wb"></div>');
 function worldBtns(){var w=$("wb");if(!w)return;w.innerHTML="";BUBBLES.forEach(function(b){var e=document.createElement("button");e.innerHTML='<span class="dot" style="background:rgb('+b.c+')"></span>'+esc(b.n);e.onclick=function(){fit(b.cx,b.cy,b.r*1.1)};w.appendChild(e)})}
 try{if(!API&&sessionStorage.getItem("istoki-adm")===ADMH)ADMIN=true}catch(e){}
-if(API){try{TOKEN=sessionStorage.getItem("istoki-supa-token");ADMIN=false}catch(e){TOKEN=null}}
+if(API){ADMIN=false;restoreSession()}
 try{var ce=localStorage.getItem("istoki-cfg");CFG=ce?JSON.parse(ce):null}catch(e){CFG=null}if(!CFG&&BASE&&BASE.CFG)CFG=BASE.CFG;
 try{var pe0=localStorage.getItem("istoki-ev");EV_ON=pe0===null?!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches):pe0==="1"}catch(e){}
 NAMED.forEach(function(n){if(!n[4]){n.orig=n[0];n.desc0=n[3]}});BUBBLES.forEach(function(b){b.n0=b.n;b.c0=b.c});
@@ -674,6 +741,9 @@ $("ev_f").onchange=function(){if(!need())return;EVF=+this.value;CFG=Object.assig
 ["comet","meteors","nova","wave","aurora","pulse"].forEach(function(t){$("evb_"+t).onclick=function(){if(!need())return;evSpawn(t)}});
 $("ze").style.opacity=EV_ON?1:.45;$("ze").onclick=function(){EV_ON=!EV_ON;try{localStorage.setItem("istoki-ev",EV_ON?"1":"0")}catch(e){}this.style.opacity=EV_ON?1:.45;if(!EV_ON)EVS=[]};
 if(API){pull(true);setInterval(function(){if(!document.hidden)pull()},5000)}
+["storm","vortex","fireflies","mist","eclipse","ripples","rockfall","rift"].forEach(function(t){$("evw_"+t).onclick=function(){if(!need())return;var v=$("evw_t").value,all=[-1].concat(BUBBLES.map(function(b,i){return i}));
+  if(v==="all")all.forEach(function(w){evwSpawn(t,w)});else if(v==="rand")evwSpawn(t,all[Math.floor(Math.random()*all.length)]);else evwSpawn(t,v==="c"?-1:+v)}});
+setInterval(function(){if(!EV_ON||document.hidden||EVS.length>=3||Date.now()<nextEvW)return;var all=[-1].concat(BUBBLES.map(function(b,i){return i})).filter(evWOn);if(all.length){var ks=Object.keys(EVW_TYPES);evwSpawn(ks[Math.floor(Math.random()*ks.length)],all[Math.floor(Math.random()*all.length)])}nextEvW=Date.now()+rnd(12000,34000)/EVF},1000);
 $("evb_lv").onclick=function(){if(!need())return;lvStart(Math.floor(Math.random()*1e9),0)};
 setInterval(function(){lvCheck()},1000);lvCheck();
 setInterval(function(){if(!EV_ON||document.hidden||EVS.length>=2||Date.now()<nextEv)return;var T=["comet","meteors","nova","wave","aurora","pulse"];evSpawn(T[Math.floor(Math.random()*T.length)]);nextEv=Date.now()+rnd(25000,70000)/EVF},1000);
